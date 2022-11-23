@@ -42,6 +42,9 @@ class BaseTrainer:
 
         self.epochs = config.epoch
         self.start_epoch = 1
+        
+        self.weight_dir = config.weight_basepath
+        self.best_val_auc = 0
 
     def _train_epoch(self, epoch):
         """
@@ -106,3 +109,22 @@ class BaseTrainer:
         for epoch in range(self.start_epoch, self.epochs + 1):
             result = self._train_epoch(epoch)
             wandb.log(result, step=epoch)
+
+            if result['val_aucroc'] > self.best_val_auc:
+                self.best_val_auc = result['val_aucroc']
+                self._save_checkpoint(epoch)
+
+    def _save_checkpoint(self, epoch):
+        """
+        Saving checkpoints
+        :param epoch: current epoch number
+        """
+        model_name = type(self.model).__name__
+        state = {
+            'model_name': model_name,
+            'epoch': epoch,
+            'state_dict': self.model.state_dict(),
+        }
+
+        save_path = str(self.weight_dir / 'best_model.pt')
+        torch.save(state, save_path)
