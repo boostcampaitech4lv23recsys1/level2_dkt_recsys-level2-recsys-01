@@ -37,8 +37,10 @@ Deep Knowledge Tracing/
 │
 ├── trainer/ - trainers, losses, metric, optimizer, and scheduler
 │   ├── trainer.py
+│   ├── loss.py
 │   ├── metric.py
-│   └── loss.py
+│   ├── optimizer.py
+│   └── scheduler.py
 │
 ├── logger/ - module for wandb  and logging
 │   └── wandb_logger.py
