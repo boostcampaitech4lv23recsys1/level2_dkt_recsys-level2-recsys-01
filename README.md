@@ -21,24 +21,27 @@ Deep Knowledge Tracing/
 ├── config.py - holds configuration for training
 │
 ├── data_loader/ - anything about data loading goes here
-│   └── data_loaders.py
+│   ├── data_loaders.py
+│   ├── dataset.py
+│   └── preprocess.py
 │
 ├── data/ - default directory for storing input data
 │
-├── model/ - models, losses, and metrics
-│   ├── model.py
-│   ├── metric.py
-│   └── loss.py
+├── model/ - models
+│   ├── model_example_1.py
+│   └── model_example_2.py
 │
 ├── saved/
 │   ├── models/ - trained models are saved here
 │   └── log/ - default logdir for wandb and logging output
 │
-├── trainer/ - trainers
-│   └── trainer.py
+├── trainer/ - trainers, losses, metric, optimizer, and scheduler
+│   ├── trainer.py
+│   ├── metric.py
+│   └── loss.py
 │
 ├── logger/ - module for wandb  and logging
-│   └── wandb.py
+│   └── wandb_logger.py
 │
 └── utils/ - small utility functions
     ├── util.py
