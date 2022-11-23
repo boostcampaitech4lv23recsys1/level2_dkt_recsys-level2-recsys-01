@@ -30,3 +30,10 @@ def top_k_acc(output, target, k=3):
 def auc_roc(output, target):
 
     raise NotImplementedError
+
+
+def get_metric(config):
+    if config.metric == "accuracy":
+        return accuracy
+    if config.metric == "aucroc":
+        return auc_roc
