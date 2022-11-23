@@ -14,3 +14,10 @@ def nll_loss(output, target):
 def RMSE_loss(output, target):
 
     raise NotImplementedError
+
+
+def get_loss(config):
+    if config.criterion == "nll_loss":
+        return nll_loss
+    if config.criterion == "rmse":
+        return RMSE_loss

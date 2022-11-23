@@ -16,23 +16,19 @@ class BaseDataLoader(DataLoader):
     """
 
     def __init__(self, dataset: Dataset, config, collate_fn=default_collate):
-        """_summary_
+        """
         dataset이랑 config 줘서 dataloader 만들기
         """
-        self.validation_split = validation_split
-        self.shuffle = shuffle
-
-        self.batch_idx = 0
         self.n_samples = len(dataset)
+        self.batch_size = config.batch_size
+        self.valid
 
         self.sampler, self.valid_sampler = self._split_sampler(self.validation_split)
 
         self.init_kwargs = {
             "dataset": dataset,
-            "batch_size": batch_size,
-            "shuffle": self.shuffle,
+            "batch_size": self.batch_size,
             "collate_fn": collate_fn,
-            "num_workers": num_workers,
         }
         super().__init__(sampler=self.sampler, **self.init_kwargs)
 
