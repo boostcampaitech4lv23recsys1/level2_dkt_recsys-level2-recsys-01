@@ -8,6 +8,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from ..logger import wandb_logger
 from . import loss, metric, optimizer, scheduler
+from ..utils import MetricTracker
 import wandb
 
 
@@ -32,12 +33,18 @@ class BaseTrainer:
 
         # 학습 관련 파라미터
         self.criterion = loss.get_loss(config)
-        self.metric_ftns = metric.get_metric(config)
+        self.metric_ftns = config.metric
         self.optimizer = optimizer.get_optimizer(self.model, config)
         self.lr_scheduler = scheduler.get_scheduler(self.optimizer, config)
 
+        self.train_metrics = MetricTracker('loss', *self.metric_ftns)
+        self.valid_metrics = MetricTracker('loss', *self.metric_ftns)
+
         self.epochs = config.epoch
         self.start_epoch = 1
+        
+        self.weight_dir = config.weight_basepath
+        self.best_val_auc = 0
 
     def _train_epoch(self, epoch):
         """
@@ -48,18 +55,29 @@ class BaseTrainer:
 
         """
         할일
-        1. return에 wandb로 찍을 값 넘기기
+        1. return에 wandb로 찍을 값 넘기기 (11/23 김은혜 완)
         2. 최적의 경우 모델 parameter 저장해서 inference가 가능하도록 하기 (pytorch template 원래 파일 가면 예시가 잘 있다.)
         """
+        log = dict()
         self.model.train()
         for batch_idx, (data, target) in enumerate(self.train_data_loader):
             data, target = data.to(self.device), target.to(self.device)
 
-            self.optimizer.zero_grad()
+            
             output = self.model(data)
             loss = self.criterion(output, target)
+            self.train_metrics.update('loss', loss.item())
+            for met in self.metric_ftns:
+                ftns = metric.get_metric(met)
+                self.train_metrics.update(met, ftns(output, target))
+
+            # Backpropagation
+            self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+        
+        train_log = self.train_metrics.result()
+        log.update(**{'train_'+k : v for k, v in train_log.items()})
 
         self.model.eval()
         for batch_idx, (data, target) in enumerate(self.valid_data_loader):
@@ -68,10 +86,17 @@ class BaseTrainer:
             self.optimizer.zero_grad()
             output = self.model(data)
             loss = self.criterion(output, target)
+            self.valid_metrics.update('loss', loss.item())
+            for met in self.metric_ftns:
+                ftns = metric.get_metric(met)
+                self.valid_metrics.update(met, ftns(output, target))
+
+        val_log = self.valid_metrics.result()
+        log.update(**{'val_'+k : v for k, v in val_log.items()})
 
         self.lr_scheduler.step()
 
-        return loss
+        return log
 
     def train(self):
         """
@@ -83,14 +108,23 @@ class BaseTrainer:
         wandb_logger.init(key, self.model)
         for epoch in range(self.start_epoch, self.epochs + 1):
             result = self._train_epoch(epoch)
-            wandb.log(result)
-            wandb.log(
-                {
-                    "epoch": epoch,
-                    "train_loss_epoch": train_loss,
-                    "train_auc_epoch": train_auc,
-                    "train_acc_epoch": train_acc,
-                    "valid_auc_epoch": auc,
-                    "valid_acc_epoch": acc,
-                }
-            )
+            wandb.log(result, step=epoch)
+
+            if result['val_aucroc'] > self.best_val_auc:
+                self.best_val_auc = result['val_aucroc']
+                self._save_checkpoint(epoch)
+
+    def _save_checkpoint(self, epoch):
+        """
+        Saving checkpoints
+        :param epoch: current epoch number
+        """
+        model_name = type(self.model).__name__
+        state = {
+            'model_name': model_name,
+            'epoch': epoch,
+            'state_dict': self.model.state_dict(),
+        }
+
+        save_path = str(self.weight_dir / 'best_model.pt')
+        torch.save(state, save_path)
