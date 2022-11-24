@@ -4,6 +4,7 @@
 
 import os
 
+
 class CFG:
     use_cuda_if_available = True
     user_wandb = True
@@ -14,7 +15,7 @@ class CFG:
     loader_verbose = True
 
     # dump
-    output_dir = "./output/"
+    output_dir = "./submission/"
     pred_file = "submission.csv"
 
     # build
@@ -30,8 +31,8 @@ class CFG:
     epochs = 20
     batch_size = 32
     learning_rate = 0.001
-    sceduler = None
-    weight_basepath = "./weight"
+    lr_scheduler = None
     optimizer = None
     criterion = None
-    metric = None
+    metric = None  # list
+    weight_basepath = "./saved/models/"

@@ -32,8 +32,8 @@ def auc_roc(output, target):
     raise NotImplementedError
 
 
-def get_metric(config):
-    if config.metric == "accuracy":
+def get_metric(metric):
+    if metric == "accuracy":
         return accuracy
-    if config.metric == "aucroc":
+    if metric == "aucroc":
         return auc_roc
