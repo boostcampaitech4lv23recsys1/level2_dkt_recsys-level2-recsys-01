@@ -34,4 +34,4 @@ class CFG:
     weight_basepath = "./weight"
     optimizer = None
     criterion = None
-    metric = None
+    metric = None # list
