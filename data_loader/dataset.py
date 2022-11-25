@@ -1,7 +1,6 @@
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-from torch.utils.data.dataloader import default_collate
 import numpy as np
 
 
@@ -58,7 +57,7 @@ class BaseDataset(Dataset):
         # max seq len을 고려하여서 이보다 길면 자르고 아닐 경우 그대로 놔둔다
         if seq_len > self.max_seq_len:
             for i, col in enumerate(cat_cols):
-                cat_cols[i] = col[self.max_seq_len :]
+                cat_cols[i] = col[-self.max_seq_len :]
             for i, col in enumerate(num_cols):
                 num_cols[i] = col[-self.max_seq_len :]
             mask = np.ones(self.max_seq_len, dtype=np.int16)
@@ -79,8 +78,31 @@ class BaseDataset(Dataset):
         return {"cat": cat_cols, "num": num_cols, "answerCode": y}
 
 
-def collate(data):
-    raise NotImplementedError
+def sequence_collate_fn(batch):
+    collate_X_cat = []
+    collate_X_num = []
+    collate_answerCode = []
+
+    for data in batch:
+        batch_X_cat = data["cat"]
+        batch_X_num = data["num"]
+        batch_y = data["answerCode"]
+
+        collate_X_cat.append(batch_X_cat)
+        collate_X_num.append(batch_X_num)
+        collate_answerCode.append(batch_y)
+
+    collate_X_cat = [torch.nn.utils.rnn.pad_sequence(collate_X_cat, batch_first=True)]
+    collate_X_num = [torch.nn.utils.rnn.pad_sequence(collate_X_num, batch_first=True)]
+    collate_answerCode = [
+        torch.nn.utils.rnn.pad_sequence(collate_answerCode, batch_first=True)
+    ]
+
+    return {
+        "cat": torch.stack(collate_X_cat),
+        "num": torch.stack(collate_X_num),
+        "y": torch.stack(collate_answerCode),
+    }
 
 
 def get_loader(train_set, val_set, config):
