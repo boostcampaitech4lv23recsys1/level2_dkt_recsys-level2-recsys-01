@@ -1,7 +1,6 @@
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-from torch.utils.data.dataloader import default_collate
 from config import CFG
 import numpy as np
 
@@ -93,11 +92,34 @@ class BaseDataset(Dataset):
         return {"cat": cat_cols, "num": num_cols, "answerCode": y}
 
 
-def collate(data):
-    raise NotImplementedError
+def sequence_collate_fn(batch):
+    collate_X_cat = []
+    collate_X_num = []
+    collate_answerCode = []
+
+    for data in batch:
+        batch_X_cat = data["cat"]
+        batch_X_num = data["num"]
+        batch_y = data["answerCode"]
+
+        collate_X_cat.append(batch_X_cat)
+        collate_X_num.append(batch_X_num)
+        collate_answerCode.append(batch_y)
+
+    collate_X_cat = [torch.nn.utils.rnn.pad_sequence(collate_X_cat, batch_first=True)]
+    collate_X_num = [torch.nn.utils.rnn.pad_sequence(collate_X_num, batch_first=True)]
+    collate_answerCode = [
+        torch.nn.utils.rnn.pad_sequence(collate_answerCode, batch_first=True)
+    ]
+
+    return {
+        "cat": torch.stack(collate_X_cat),
+        "num": torch.stack(collate_X_num),
+        "y": torch.stack(collate_answerCode),
+    }
 
 
-def get_loader(train_set, val_set, collate=default_collate):
+def get_loader(train_set, val_set, collate=sequence_collate_fn):
     train_loader = DataLoader(
         train_set,
         num_workers=CFG.num_workers,
