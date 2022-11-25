@@ -11,7 +11,8 @@
         "data_dir" : "./data",
         "data_ver" : "사용할 dataset version",
         "fe_elapsed_time": [200, "mean"],
-        "k-fold" : [true, 5]
+        "use_k_fold": true,
+	       "num_fold" : 5
   },
 
   "dataset" : {
