@@ -1,5 +1,9 @@
 import os
 import random
+import json
+
+from pathlib import Path
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
@@ -16,6 +20,11 @@ def set_seed(seed=417):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
+
+def read_json(fname):
+    fname = Path(fname)
+    with fname.open('rt') as handle:
+        return json.load(handle, object_hook=OrderedDict)
 
 class MetricTracker:
     def __init__(self, *keys):
