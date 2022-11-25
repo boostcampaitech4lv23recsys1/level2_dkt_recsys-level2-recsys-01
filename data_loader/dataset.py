@@ -61,7 +61,7 @@ class BaseDataset(Dataset):
     def __getitem__(self, index: int) -> object:
         cat = self.X_cat[index][0]
         num = self.X_num[index][0]
-        y = torch.tensor(self.X_num[index][0], dtype=np.int16)
+        y = torch.tensor(self.Y[index][0], dtype=np.int16)
 
         cat_cols = [cat[i] for i in range(len(cat))]
         num_cols = [num[i] for i in range(len(num))]
