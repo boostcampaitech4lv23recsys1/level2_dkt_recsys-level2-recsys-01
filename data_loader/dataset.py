@@ -71,7 +71,7 @@ class BaseDataset(Dataset):
         # max seq len을 고려하여서 이보다 길면 자르고 아닐 경우 그대로 놔둔다
         if seq_len > self.config.max_seq_len:
             for i, col in enumerate(cat_cols):
-                cat_cols[i] = col[self.config.max_seq_len :]
+                cat_cols[i] = col[-self.config.max_seq_len :]
             for i, col in enumerate(num_cols):
                 num_cols[i] = col[-self.config.max_seq_len :]
             mask = np.ones(self.config.max_seq_len, dtype=np.int16)
