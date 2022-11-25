@@ -28,6 +28,7 @@ class CFG:
     epochs = 20
     batch_size = 32
     learning_rate = 0.001
+    max_seq_len = 20
     sceduler = None
     weight_basepath = "./weight"
     optimizer = None
@@ -41,6 +42,4 @@ class CFG:
                             'question_acc', 'month_acc', 'hour_acc', 'exp_test', 'exp_tag',
                             'exp_question', 'ans_cumsum', 'continuous_user', 'continuous_test'] # 쓸 column들을 남겨주세요
     fe_elapsed_time = [200, 'mean'] # elapsed time의 이상치 threshold와 -1 imputation 방법
-    
     k_fold = [True, 5]
-    

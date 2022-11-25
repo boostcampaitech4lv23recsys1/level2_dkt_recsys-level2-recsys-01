@@ -8,23 +8,19 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
 from torch.utils.data.sampler import SubsetRandomSampler
-
+from config import CFG
 
 class BaseDataLoader(DataLoader):
     """
     Base class for all data loaders
     """
 
-    def __init__(self, dataset: Dataset, config, collate_fn=default_collate):
+    def __init__(self, dataset: Dataset, collate_fn=default_collate):
         """
         dataset이랑 config 줘서 dataloader 만들기
         """
         self.n_samples = len(dataset)
-        self.batch_size = config.batch_size
-        self.valid
-
-        self.sampler, self.valid_sampler = self._split_sampler(self.validation_split)
-
+        self.batch_size = CFG.batch_size
         self.init_kwargs = {
             "dataset": dataset,
             "batch_size": self.batch_size,
