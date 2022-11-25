@@ -17,7 +17,7 @@ def RMSE_loss(output, target):
 
 
 def get_loss(config):
-    if config.criterion == "nll_loss":
+    if config['loss'] == "nll_loss":
         return nll_loss
-    if config.criterion == "rmse":
+    if config['loss'] == "rmse":
         return RMSE_loss

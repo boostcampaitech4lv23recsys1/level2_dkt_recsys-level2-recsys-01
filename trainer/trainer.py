@@ -2,6 +2,7 @@
 train.py에서 이 파일을 호출
 주어진 data에 대해서 학습만 시키면 됨
 """
+import os
 import torch
 from numpy import inf
 import torch.nn as nn
@@ -28,22 +29,23 @@ class BaseTrainer:
         self.train_data_loader = train_data_loader
         self.valid_data_loader = valid_data_loader
         self.config = config
+        self.cfg_trainer = config['trainer']
 
-        self.device = config.device
+        self.device = config['device']
 
         # 학습 관련 파라미터
         self.criterion = loss.get_loss(config)
-        self.metric_ftns = config.metric
-        self.optimizer = optimizer.get_optimizer(self.model, config)
+        self.metric_ftns = self.cfg_trainer['metric']
+        self.optimizer = optimizer.get_optimizer(self.model, config['optimizer'])
         self.lr_scheduler = scheduler.get_scheduler(self.optimizer, config)
 
         self.train_metrics = MetricTracker('loss', *self.metric_ftns)
         self.valid_metrics = MetricTracker('loss', *self.metric_ftns)
 
-        self.epochs = config.epoch
+        self.epochs = self.cfg_trainer['epochs']
         self.start_epoch = 1
         
-        self.weight_dir = config.weight_basepath
+        self.save_dir = self.cfg_trainer['save_dir']
         self.best_val_auc = 0
 
     def _train_epoch(self, epoch):
@@ -51,12 +53,6 @@ class BaseTrainer:
         Training logic for an epoch
 
         :param epoch: Current epoch number
-        """
-
-        """
-        할일
-        1. return에 wandb로 찍을 값 넘기기 (11/23 김은혜 완)
-        2. 최적의 경우 모델 parameter 저장해서 inference가 가능하도록 하기 (pytorch template 원래 파일 가면 예시가 잘 있다.)
         """
         log = dict()
         self.model.train()
@@ -94,8 +90,6 @@ class BaseTrainer:
         val_log = self.valid_metrics.result()
         log.update(**{'val_'+k : v for k, v in val_log.items()})
 
-        self.lr_scheduler.step()
-
         return log
 
     def train(self):
@@ -104,11 +98,14 @@ class BaseTrainer:
         """
         # 고유 키 값 넣어주세요
         key = None
-
-        wandb_logger.init(key, self.model)
+        
+        wandb_logger.init(key, self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):
             result = self._train_epoch(epoch)
             wandb.log(result, step=epoch)
+
+            if self.lr_scheduler:
+                self.lr_scheduler.step()
 
             if result['val_aucroc'] > self.best_val_auc:
                 self.best_val_auc = result['val_aucroc']
@@ -125,6 +122,7 @@ class BaseTrainer:
             'epoch': epoch,
             'state_dict': self.model.state_dict(),
         }
-
-        save_path = str(self.weight_dir / 'best_model.pt')
+        save_path = os.path.join(self.save_dir, model_name)
+        os.makedirs(save_path, exist_ok=True)
+        save_path = os.path.join(save_path, 'best_model.pt')
         torch.save(state, save_path)

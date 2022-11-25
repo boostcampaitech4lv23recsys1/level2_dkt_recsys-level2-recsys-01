@@ -1,31 +1,35 @@
-from config import CFG
 import pandas as pd
-import numpy as np
-import os
 from sklearn.model_selection import GroupKFold
 
 
 class Preprocess:
-    def __init__(self, CFG):
-        self.config = CFG
+    def __init__(self, config):
+        self.config = config
+        self.cfg_preprocess = config['preprocess']
+
+        self.cat_cols = config['cat_cols']
+        self.num_cols = config['num_cols']
+
+        self.feature_engineering = ['userID'] + self.cat_cols + self.num_cols
+
         self.train_data = None
         self.test_data = None
 
     ## feature engineering
     def __feature_engineering(self, data):
-        data = data[self.config.feature_engineering]
+        data = data[self.feature_engineering]
         return data
 
     ## 공통으로 들어가야 하는 preprocessing (Ex elapsed time : threshold, categories : encoding)
     def __preprocessing(self, data, is_train=True):
     
         columns = data.columns.tolist()
-        train = pd.read_csv(f"{self.config.basepath}/train_{self.config.data_ver}.csv")
+        train = pd.read_csv(f"{self.cfg_preprocess['data_dir']}/train_{self.cfg_preprocess['data_ver']}.csv")
         trainuser = train.userID.unique().tolist()
 
         # elapsed_time
         if "elapsed_time" in columns:
-            threshold, imputation = self.config.fe_elapsed_time
+            threshold, imputation = self.cfg_preprocess['fe_elapsed_time']
             data.loc[
                 data[data["elapsed_time"] > threshold].index, "elapsed_time"
             ] = threshold
@@ -42,17 +46,6 @@ class Preprocess:
                 test2time
             )
 
-        # index로 바꿔줌
-        base_cat_col = [
-            "KnowledgeTag",
-            "question_number",
-            "test_cat",
-            "test_id",
-            "test_month",
-            "test_day",
-            "test_hour",
-        ]
-
         def val2idx(val_list):
             val2idx = {}
             for idx, val in enumerate(val_list):
@@ -60,7 +53,7 @@ class Preprocess:
             return val2idx
 
         for col in columns:
-            if col in base_cat_col:
+            if col in self.cat_cols:
                 tmp2idx = val2idx(data[col].unique().tolist())
                 tmp = data[col].map(tmp2idx)
                 data.loc[:, f"{col}2idx"] = tmp
@@ -74,7 +67,7 @@ class Preprocess:
         return data
 
     def load_data_from_file(self):
-        df = pd.read_csv(self.config.data_dir)
+        df = pd.read_csv(f"{self.cfg_preprocess['data_dir']}/traintest_{self.cfg_preprocess['data_ver']}.csv")
         df = df.sort_values(by=["userID", "Timestamp"], axis=0)
         return df
 
@@ -91,7 +84,7 @@ class Preprocess:
         return self.test_data
 
     def gkf_data(self, data):
-        k = self.config.k_fold[1]
+        k = self.cfg_preprocess['num_fold']
         gkf = GroupKFold(n_splits=k)
         group = data["userID"].tolist()
         return gkf, group
