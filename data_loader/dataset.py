@@ -2,15 +2,15 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
-from config import CFG
 import numpy as np
 
 
 class BaseDataset(Dataset):
-    def __init__(self, data, idx) -> None:
+    def __init__(self, data, idx, config) -> None:
         super().__init__()
         self.data = data.loc[idx, :].reset_index(drop=True)
-        self.config = CFG
+        self.config = config
+        self.max_seq_len = config['dataset']['max_seq_len']
 
         def grouping_data(r, column):
             result = []
@@ -23,22 +23,8 @@ class BaseDataset(Dataset):
         )
         self.data = self.data.drop(["answerCode"], axis=1)
 
-        base_cat_col = set(
-            [
-                "KnowledgeTag2idx",
-                "question_number2idx",
-                "test_cat2idx",
-                "test_id2idx",
-                "test_month2idx",
-                "test_day2idx",
-                "test_hour2idx",
-            ]
-        )
-
-        self.cur_num_col = list(set(self.data.columns) - base_cat_col)
-        self.cur_cat_col = list(set(self.data.columns) - set(self.cur_num_col)) + [
-            "userID"
-        ]
+        self.cur_cat_col = [f'{col}2idx' for col in config['cat_cols']] + ['userID']
+        self.cur_num_col = config['num_cols'] + ['userID']
 
         self.X_cat = self.data.loc[:, self.cur_cat_col].copy()
         self.X_num = self.data.loc[:, self.cur_num_col].copy()
@@ -70,14 +56,14 @@ class BaseDataset(Dataset):
         seq_len = len(cat[0])
 
         # max seq len을 고려하여서 이보다 길면 자르고 아닐 경우 그대로 놔둔다
-        if seq_len > self.config.max_seq_len:
+        if seq_len > self.max_seq_len:
             for i, col in enumerate(cat_cols):
-                cat_cols[i] = col[self.config.max_seq_len :]
+                cat_cols[i] = col[self.max_seq_len :]
             for i, col in enumerate(num_cols):
-                num_cols[i] = col[-self.config.max_seq_len :]
-            mask = np.ones(self.config.max_seq_len, dtype=np.int16)
+                num_cols[i] = col[-self.max_seq_len :]
+            mask = np.ones(self.max_seq_len, dtype=np.int16)
         else:
-            mask = np.zeros(self.config.max_seq_len, dtype=np.int16)
+            mask = np.zeros(self.max_seq_len, dtype=np.int16)
             mask[-seq_len:] = 1
 
         # mask도 columns 목록에 포함시킴
@@ -97,19 +83,19 @@ def collate(data):
     raise NotImplementedError
 
 
-def get_loader(train_set, val_set, collate=default_collate):
+def get_loader(train_set, val_set, config):
     train_loader = DataLoader(
         train_set,
-        num_workers=CFG.num_workers,
+        num_workers=config['num_workers'],
         shuffle=True,
-        batch_size=CFG.batch_size,
-        collate_fn=collate,
+        batch_size=config['batch_size'],
+        collate_fn=config['collate_fn'],
     )
     valid_loader = DataLoader(
         val_set,
-        num_workers=CFG.num_workers,
+        num_workers=config['num_workers'],
         shuffle=False,
-        batch_size=CFG.batch_size,
-        collate_fn=collate,
+        batch_size=config['batch_size'],
+        collate_fn=config['collate_fn'],
     )
     return train_loader, valid_loader

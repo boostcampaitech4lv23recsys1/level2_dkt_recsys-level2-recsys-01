@@ -8,24 +8,21 @@
 
 
   "preprocess": {
-      "type": "사용할 Preprocess",
-      "args": {
-          "data_dir": "/opt/ml/input/data"
-      }
+        "data_dir" : "./data",
+        "data_ver" : "사용할 dataset version",
+        "fe_elapsed_time": [200, "mean"],
+        "k-fold" : [true, 5]
   },
 
   "dataset" : {
-      "type": "사용할 Dataset",
-      "args": {
-          "data_augmentation" : false
-      }
+        "type": "사용할 Dataset",
+        "max_seq_len": 20
   },
 
   "data_loader" : {
       "type": "사용할 DataLoader",
       "args": {
           "batch_size" : 32,
-          "shuffle" : true,
           "num_workers" : 8,
           "collate_fn" : "시용할 collate"
       }
