@@ -12,7 +12,7 @@ class CFG:
     loader_verbose = True
 
     # dump
-    output_dir = "./output/"
+    output_dir = "./submission/"
     pred_file = "submission.csv"
 
     # build
@@ -33,6 +33,8 @@ class CFG:
     weight_basepath = "./weight"
     optimizer = None
     criterion = None
+    weight_basepath = "./saved/models/"
+
     metric = None
     feature_engineering = ['userID', 'assessmentItemID', 'testId', 'answerCode',
                            'week_num', 'elapsed_time', 'time_question_median',
