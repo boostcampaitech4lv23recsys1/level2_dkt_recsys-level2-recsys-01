@@ -13,14 +13,14 @@ class BaseDataset(Dataset):
 
         def grouping_data(r, column):
             result = []
-            for col in column[1:]:
+            for col in column[:]:
                 result.append(np.array(r[col]))
             return result
-
+        
         self.Y = self.data.groupby("userID").apply(
-            grouping_data, column=["no_meaning", "answerCode"]
+            grouping_data, column=["answerCode2idx"]
         )
-        self.data = self.data.drop(["answerCode"], axis=1)
+        # self.data = self.data.drop(["answerCode2idx"], axis=1)
 
         self.cur_cat_col = [f'{col}2idx' for col in config['cat_cols']] + ['userID']
         self.cur_num_col = config['num_cols'] + ['userID']
@@ -41,16 +41,15 @@ class BaseDataset(Dataset):
 
     # 총 데이터의 개수를 리턴
     def __len__(self) -> int:
-        return len(self.data_X)
+        return len(self.X_cat)+len(self.X_num)
 
     # 인덱스를 입력받아 그에 맵핑되는 입출력 데이터를 파이토치의 Tensor 형태로 리턴
     def __getitem__(self, index: int) -> object:
-        cat = self.X_cat[index][0]
-        num = self.X_num[index][0]
-        y = torch.tensor(self.Y[index][0], dtype=np.int16)
+        cat = self.X_cat[index]
+        num = self.X_num[index]
 
         cat_cols = [cat[i] for i in range(len(cat))]
-        num_cols = [num[i] for i in range(len(num))]
+        num_cols = [num[i].astype(str).astype(float) for i in range(len(num))]
 
         seq_len = len(cat[0])
 
@@ -60,6 +59,7 @@ class BaseDataset(Dataset):
                 cat_cols[i] = col[-self.max_seq_len :]
             for i, col in enumerate(num_cols):
                 num_cols[i] = col[-self.max_seq_len :]
+            y = torch.tensor(self.Y[index][-self.max_seq_len :])
             mask = np.ones(self.max_seq_len, dtype=np.int16)
         else:
             mask = np.zeros(self.max_seq_len, dtype=np.int16)

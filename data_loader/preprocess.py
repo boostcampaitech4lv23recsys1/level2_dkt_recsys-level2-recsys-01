@@ -25,8 +25,8 @@ class Preprocess:
     
         columns = data.columns.tolist()
         train = pd.read_csv(f"{self.cfg_preprocess['data_dir']}/train_{self.cfg_preprocess['data_ver']}.csv")
-        trainuser = train.userID.unique().tolist()
-
+        trainusers = train['userID'].unique()
+        
         # elapsed_time
         if "elapsed_time" in columns:
             threshold, imputation = self.cfg_preprocess['fe_elapsed_time']
@@ -58,11 +58,13 @@ class Preprocess:
                 tmp = data[col].map(tmp2idx)
                 data.loc[:, f"{col}2idx"] = tmp
                 data = data.drop([col], axis=1)
-
+    
+        data['userID'] = val2idx(data['userID'].unique().tolist()) # 얘를 해야함
+        
         if is_train:
-            data = data[data["userID"].isin(trainuser)].reset_index(drop=True)
+            data = data[data["answerCode"]!=-1].reset_index(drop=True)
         else:
-            data = data[~data["userID"].isin(trainuser)].reset_index(drop=True)
+            data = data[~data['userID'].isin(trainusers)].reset_index(drop=True)
 
         return data
 
