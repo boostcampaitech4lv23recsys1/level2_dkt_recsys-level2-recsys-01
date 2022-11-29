@@ -10,7 +10,6 @@ class CFG:
 
     # data
     basepath = "./data"
-    data_ver = 'v1.1'
     data_ver = "traintest_v1.2.csv"
     test_file = "test_data.csv"
     loader_verbose = True
