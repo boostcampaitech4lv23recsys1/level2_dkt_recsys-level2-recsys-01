@@ -12,7 +12,7 @@
         "data_ver" : "사용할 dataset version",
         "fe_elapsed_time": [200, "mean"],
         "use_k_fold": true,
-        "num_fold" : 5
+	    "num_fold" : 5
   },
 
   "dataset" : {
