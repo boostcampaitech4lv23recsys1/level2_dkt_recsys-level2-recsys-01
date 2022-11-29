@@ -64,20 +64,24 @@ class BaseDataset(Dataset):
         else:
             mask = np.zeros(self.max_seq_len, dtype=np.int16)
             mask[-seq_len:] = 1
-            for i, col in enumerate(cat_cols):
-                cat_cols[i] = col[-self.max_seq_len :]
-            for i, col in enumerate(num_cols):
-                num_cols[i] = col[-self.max_seq_len :]
-
+                
         # mask도 columns 목록에 포함시킴
         cat_cols.append(mask)
         num_cols.append(mask)
 
         # np.array -> torch.tensor 형변환
-        for i, col in enumerate(cat_cols):
-            cat_cols[i] = torch.tensor(col)
-        for i, col in enumerate(num_cols):
-            num_cols[i] = torch.tensor(col)
+        if seq_len > self.max_seq_len:
+            for i, col in enumerate(cat_cols):
+                cat_cols[i] = torch.tensor(col)
+            for i, col in enumerate(num_cols):
+                num_cols[i] = torch.tensor(col)
+        else:
+            for i, col in enumerate(cat_cols):
+                cat_cols[i] = torch.cat([torch.zeros(self.max_seq_len-seq_len),
+                                            torch.tensor(col)])
+            for i, col in enumerate(num_cols):
+                num_cols[i] = torch.cat([torch.zeros(self.max_seq_len-seq_len),
+                                         torch.tensor(col)])
 
         return {"cat": cat_cols, "num": num_cols, "answerCode": y}
 
@@ -114,14 +118,14 @@ def get_loader(train_set, val_set, config):
         train_set,
         num_workers=config['num_workers'],
         shuffle=True,
-        batch_size=config['batch_size'],
-        collate_fn=config['collate_fn'],
+        batch_size=config['batch_size']
+        # collate_fn=config['collate_fn'],
     )
     valid_loader = DataLoader(
         val_set,
         num_workers=config['num_workers'],
         shuffle=False,
-        batch_size=config['batch_size'],
-        collate_fn=config['collate_fn'],
+        batch_size=config['batch_size']
+        # collate_fn=config['collate_fn'],
     )
     return train_loader, valid_loader
