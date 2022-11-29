@@ -59,7 +59,7 @@ class Preprocess:
                 data.loc[:, f"{col}2idx"] = tmp
                 data = data.drop([col], axis=1)
     
-        data['userID'] = val2idx(data['userID'].unique().tolist()) # 얘를 해야함
+        # data['userID'] = val2idx(data['userID'].unique().tolist()) # 얘를 해야함
         
         if is_train:
             data = data[data["answerCode"]!=-1].reset_index(drop=True)
