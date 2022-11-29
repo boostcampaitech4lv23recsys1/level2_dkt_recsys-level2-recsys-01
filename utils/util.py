@@ -45,3 +45,35 @@ class MetricTracker:
 
     def result(self):
         return dict(self._data.average)
+
+
+FEATURES = [
+    'userID',
+    'assessmentItemID',
+    'testId',
+    'week_num',
+    'elapsed_time',
+    'time_question_median',
+    'time_user_median',
+    'time_user_mean',
+    'KnowledgeTag',
+    'test_cat',
+    'test_id',
+    'question_number',
+    'question_numslen',
+    'test_month',
+    'test_day',
+    'test_hour',
+    'user_acc',
+    'test_acc',
+    'tag_acc',
+    'question_acc',
+    'month_acc',
+    'hour_acc',
+    'exp_test',
+    'exp_tag',
+    'exp_question',
+    'ans_cumsum',
+    'continuous_user',
+    'continuous_test'
+]
