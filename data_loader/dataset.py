@@ -125,11 +125,7 @@ def get_loader(train_set, val_set, config):
     )
     return train_loader, valid_loader
         row = self.data[index]
-        
-        # hi
-        return
-        # return (self.user_id[index], self.item_id[index], self.rating[index])
-
+      
 
 class XGBoostDataset(object):
     def __init__(
