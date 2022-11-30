@@ -3,6 +3,7 @@ import argparse
 import model as models
 from data_loader.preprocess import Preprocess
 from data_loader.dataset import BaseDataset, get_loader
+from sklearn.model_selection import KFold
 from trainer import BaseTrainer
 from utils import read_json
 
@@ -23,35 +24,31 @@ def main(config):
     
     preprocess = Preprocess(config)
     data = preprocess.load_train_data()
-    print("---------------------------load train data---------------------------")
+    print("---------------------------DONE PREPROCESSING---------------------------")
     
-    model_args = config['arch']['args']
-    model_args.update({
-        'cat_cols': config['cat_cols'],
-        'num_cols': config['num_cols'],
-        
-    })
-    model = getattr(models, config['arch']['type'])(model_args)
-    # 수정 요망
-    gkf, group = preprocess.gkf_data(data)
-    for train_idx, val_idx in gkf.split(data, groups=group):
+    model = getattr(models, config['arch']['type'])(config)
+    print("---------------------------DONE MODEL LOADING---------------------------")
+    kf = KFold(n_splits=config['preprocess']['num_fold'])
+    for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique())):
         train_set = BaseDataset(data, train_idx, config)
         val_set = BaseDataset(data, val_idx, config)
+        
         train, valid = get_loader(train_set, val_set, config['data_loader']['args'])
-    
+        
         trainer = BaseTrainer(
             model=model,
             train_data_loader=train,
             valid_data_loader=valid,
             config=config,
+            fold=fold+1
         )
-
+        print("---------------------------START TRAINING---------------------------")
         if 'sweep' in config:
             sweep_id = wandb.sweep(config['sweep'])
             wandb.agent(sweep_id, trainer.train, count=1)
         else:
             trainer.train()
-
+    print("---------------------------DONE TRAINING---------------------------")
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='DKT Dinosaur')

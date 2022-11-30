@@ -9,6 +9,7 @@ import numpy as np
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from . import loss, metric, optimizer, scheduler
+from logger import wandb_logger
 from utils import MetricTracker
 from sklearn.metrics import roc_auc_score, accuracy_score
 import wandb
@@ -24,13 +25,15 @@ class BaseTrainer(object):
         model: nn.Module,
         train_data_loader: DataLoader,
         valid_data_loader: DataLoader,
-        config,
+        config: dict,
+        fold: int
     ):
         self.model = model
         self.train_data_loader = train_data_loader
         self.valid_data_loader = valid_data_loader
         self.config = config
         self.cfg_trainer = config['trainer']
+        self.fold = fold
 
         self.device = config['device']
 
@@ -57,9 +60,8 @@ class BaseTrainer(object):
         """
         log = dict()
         self.model.train()
-        for batch_idx, (data, target) in enumerate(self.train_data_loader):
-            data, target = data.to(self.device), target.to(self.device)
-
+        for data in self.train_data_loader:
+            target = data['answerCode'].to(self.device)
             
             output = self.model(data)
             loss = self.criterion(output, target)
@@ -77,8 +79,8 @@ class BaseTrainer(object):
         log.update(**{'train_'+k : v for k, v in train_log.items()})
 
         self.model.eval()
-        for batch_idx, (data, target) in enumerate(self.valid_data_loader):
-            data, target = data.to(self.device), target.to(self.device)
+        for data in self.valid_data_loader:
+            target = data['answerCode'].to(self.device)
 
             self.optimizer.zero_grad()
             output = self.model(data)
@@ -125,7 +127,7 @@ class BaseTrainer(object):
         }
         save_path = os.path.join(self.save_dir, model_name)
         os.makedirs(save_path, exist_ok=True)
-        save_path = os.path.join(save_path, 'best_model.pt')
+        save_path = os.path.join(save_path, f'fold_{self.fold}_best_model.pt')
         torch.save(state, save_path)
 
 class XGBoostTrainer:

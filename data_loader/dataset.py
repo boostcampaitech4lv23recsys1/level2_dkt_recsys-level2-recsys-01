@@ -10,7 +10,8 @@ import pandas as pd
 class BaseDataset(Dataset):
     def __init__(self, data, idx, config) -> None:
         super().__init__()
-        self.data = data.loc[idx, :].reset_index(drop=True)
+        # self.data = data[.loc[idx, :].reset_index(drop=True)]
+        self.data = data[data['userID'].isin(idx)]
         self.config = config
         self.max_seq_len = config['dataset']['max_seq_len']
 
@@ -31,16 +32,12 @@ class BaseDataset(Dataset):
         self.X_cat = self.data.loc[:, self.cur_cat_col].copy()
         self.X_num = self.data.loc[:, self.cur_num_col].copy()
 
-        self.X_cat = (
-            self.X_cat.groupby("userID")
-            .apply(grouping_data, column=self.cur_cat_col)
+        self.X_cat = self.X_cat.groupby("userID") \
+            .apply(grouping_data, column=self.cur_cat_col) \
             .apply(lambda x: x[:-1])
-        )
-        self.X_num = (
-            self.X_num.groupby("userID")
-            .apply(grouping_data, column=self.cur_num_col)
+        self.X_num = self.X_num.groupby("userID") \
+            .apply(grouping_data, column=self.cur_num_col) \
             .apply(lambda x: x[:-1])
-        )
 
     # 총 데이터의 개수를 리턴
     def __len__(self) -> int:
@@ -48,6 +45,7 @@ class BaseDataset(Dataset):
 
     # 인덱스를 입력받아 그에 맵핑되는 입출력 데이터를 파이토치의 Tensor 형태로 리턴
     def __getitem__(self, index: int) -> object:
+        print(self.X_cat)
         cat = self.X_cat[index]
         num = self.X_num[index]
 
@@ -85,7 +83,7 @@ class BaseDataset(Dataset):
             for i, col in enumerate(num_cols):
                 num_cols[i] = torch.cat([torch.zeros(self.max_seq_len-seq_len),
                                          torch.tensor(col)])
-
+        # print({"cat": cat_cols, "num": num_cols, "answerCode": y})
         return {"cat": cat_cols, "num": num_cols, "answerCode": y}
 
 

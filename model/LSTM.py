@@ -3,18 +3,19 @@ import torch.nn as nn
 
 
 class LSTM(nn.Module):
-    def __init__(self, args):
+    def __init__(self, config):
         super(LSTM, self).__init__()
-        self.args = args
+        self.config = config
+        self.model_args = self.config['arch']['args']
 
-        self.hidden_dim = self.args['hidden_dim']
-        self.n_layers = self.args['n_layers']
-        self.dropout_rate = self.args['dropout_rate']
-        self.cat_cols = args['cat_cols']
-        self.num_cols = args['num_cols']
-        self.embedding_dim = self.args['embedding_dim']
+        self.hidden_dim = self.model_args['hidden_dim']
+        self.n_layers = self.model_args['n_layers']
+        self.dropout_rate = self.model_args['dropout_rate']
+        self.cat_cols = self.config['cat_cols']
+        self.num_cols = self.config['num_cols']
+        self.embedding_dim = self.model_args['embedding_dim']
         self.embedding_cat_col = dict()
-        self.cat_col_len = self.args['cat_col_len']
+        self.cat_col_len = self.config['cat_col_len']
         self.dropout = nn.Dropout(self.dropout_rate)
         
         self.embedding_answercode = nn.Embedding(3, self.embedding_dim)
