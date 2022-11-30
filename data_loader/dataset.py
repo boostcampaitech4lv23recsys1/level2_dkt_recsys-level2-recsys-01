@@ -62,12 +62,12 @@ class BaseDataset(Dataset):
                 cat_cols[i] = col[-self.max_seq_len :]
             for i, col in enumerate(num_cols):
                 num_cols[i] = col[-self.max_seq_len :]
-            y = torch.tensor(self.Y[index][-self.max_seq_len :])
+            y = torch.tensor(self.Y[user][-self.max_seq_len :])
             mask = np.ones(self.max_seq_len, dtype=np.int16)
         else:
             mask = np.zeros(self.max_seq_len, dtype=np.int16)
             mask[-seq_len:] = 1
-            y = torch.tensor(self.Y[index][:])
+            y = torch.tensor(self.Y[user][:])
                 
         # mask도 columns 목록에 포함시킴
         cat_cols.append(mask)
