@@ -6,6 +6,7 @@ class LSTM(nn.Module):
     def __init__(self, config):
         super(LSTM, self).__init__()
         self.config = config
+        self.device = config['device']
         self.model_args = self.config['arch']['args']
 
         self.hidden_dim = self.model_args['hidden_dim']
@@ -24,7 +25,7 @@ class LSTM(nn.Module):
         
         self.emb_cat_dict = nn.ModuleDict(self.embedding_cat_col)
         
-        self.cat_comb_proj = nn.Linear(self.embedding_dim * (len(self.cat_cols) + 1), self.hidden_dim // 2)
+        self.cat_comb_proj = nn.Linear(self.embedding_dim * len(self.cat_cols), self.hidden_dim // 2)
         self.num_comb_proj = nn.Linear(len(self.num_cols), self.hidden_dim // 2)
 
         self.lstm = nn.LSTM(
@@ -59,4 +60,4 @@ class LSTM(nn.Module):
         out, _ = self.lstm(self.dropout(X))
         out = self.prediction(out)
         
-        return out
+        return out.squeeze(2)

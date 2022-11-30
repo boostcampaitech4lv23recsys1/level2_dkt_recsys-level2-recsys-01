@@ -42,7 +42,7 @@
         }
     },
   
-    "loss" : "nll_loss",
+    "loss" : "bce",
   
     "optimizer" : {
         "type": "adam",

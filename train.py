@@ -26,7 +26,7 @@ def main(config):
     data = preprocess.load_train_data()
     print("---------------------------DONE PREPROCESSING---------------------------")
     
-    model = getattr(models, config['arch']['type'])(config)
+    model = getattr(models, config['arch']['type'])(config).to(config['device'])
     print("---------------------------DONE MODEL LOADING---------------------------")
     kf = KFold(n_splits=config['preprocess']['num_fold'])
     for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):

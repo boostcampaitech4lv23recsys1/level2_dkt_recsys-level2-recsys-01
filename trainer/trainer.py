@@ -64,7 +64,7 @@ class BaseTrainer(object):
             target = data['answerCode'].to(self.device)
             
             output = self.model(data)
-            loss = self.criterion(output, target)
+            loss = self._compute_loss(output, target)
             self.train_metrics.update('loss', loss.item())
             for met in self.metric_ftns:
                 ftns = metric.get_metric(met)
@@ -129,6 +129,21 @@ class BaseTrainer(object):
         os.makedirs(save_path, exist_ok=True)
         save_path = os.path.join(save_path, f'fold_{self.fold}_best_model.pt')
         torch.save(state, save_path)
+    
+    # loss계산하고 parameter update!
+    def _compute_loss(self, output, target):
+        """
+        Args :
+            preds   : (batch_size, max_seq_len)
+            targets : (batch_size, max_seq_len)
+
+        """
+        loss = self.criterion(output, target)
+
+        # 마지막 시퀀드에 대한 값만 loss 계산
+        loss = loss[:, -1]
+        loss = torch.mean(loss)
+        return loss
 
 class XGBoostTrainer:
     def __init__(
@@ -169,3 +184,4 @@ class XGBoostTrainer:
         auc = roc_auc_score(self.test_y, preds)
 
         print(f"VALID AUC : {auc} ACC : {acc}\n")
+
