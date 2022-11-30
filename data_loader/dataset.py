@@ -21,7 +21,7 @@ class BaseDataset(Dataset):
             return result
         
         self.Y = self.data.groupby("userID").apply(
-            grouping_data, column=["answerCode2idx"]
+            grouping_data, column=["answerCode"]
         )
         # self.data = self.data.drop(["answerCode2idx"], axis=1)
 
@@ -132,7 +132,7 @@ def get_loader(train_set, val_set, config):
         # collate_fn=config['collate_fn'],
     )
     return train_loader, valid_loader
-        row = self.data[index]
+        # row = self.data[index]
       
 
 class XGBoostDataset(object):

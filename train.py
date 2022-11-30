@@ -2,7 +2,7 @@ import argparse
 
 import model as models
 from data_loader.preprocess import Preprocess
-from data_loader.dataset import BaseDataset, get_loader, collate
+from data_loader.dataset import BaseDataset, get_loader
 from trainer import BaseTrainer
 from utils import read_json
 
@@ -20,9 +20,19 @@ from config import CFG
 
 
 def main(config):
-    model = getattr(models, config['arch']['type'])
+    
     preprocess = Preprocess(config)
     data = preprocess.load_train_data()
+    print("---------------------------load train data---------------------------")
+    
+    model_args = config['arch']['args']
+    model_args.update({
+        'cat_cols': config['cat_cols'],
+        'num_cols': config['num_cols'],
+        
+    })
+    model = getattr(models, config['arch']['type'])(model_args)
+    # 수정 요망
     gkf, group = preprocess.gkf_data(data)
     for train_idx, val_idx in gkf.split(data, groups=group):
         train_set = BaseDataset(data, train_idx, config)

@@ -1,0 +1,64 @@
+{
+    "name": "LSTM_test",
+    "project" : "dkt-dinosaur-test",
+    "entity" : "LSTM_test",
+    
+    "cat_cols" : ["answerCode", "KnowledgeTag", "question_number", "testId","test_cat", "test_id", "test_month", "test_day", "test_hour"], 
+    "num_cols" : ["elapsed_time", "time_question_median", "time_user_median", "time_user_mean", "question_numslen", 
+                  "user_acc", "test_acc", "tag_acc", "question_acc", "month_acc", "hour_acc", "exp_test", "exp_tag",
+                  "exp_question", "ans_cumsum", "continuous_user", "continuous_test"],
+  
+  
+    "preprocess": {
+          "data_dir" : "./data",
+          "data_ver" : "v1.1",
+          "fe_elapsed_time": [200, "mean"],
+          "use_k_fold": true,
+          "num_fold" : 5
+    },
+  
+    "dataset" : {
+          "type": "BaseDataset",
+          "max_seq_len": 20
+    },
+  
+    "data_loader" : {
+        "type": "사용할 DataLoader",
+        "args": {
+            "batch_size" : 32,
+            "num_workers" : 8,
+            "collate_fn" : "sequence_collate_fn"
+        }
+    },
+  
+    "arch" : {
+        "type": "LSTM",
+        "args": {
+            "hidden_dim" : 128,
+            "embedding_dim" : 64,
+            "num_heads" : 2,
+            "n_layers" : 1,
+            "dropout_rate" : 0.5
+        }
+    },
+  
+    "loss" : "nll_loss",
+  
+    "optimizer" : {
+        "type": "adam",
+        "args":{
+            "lr": 0.001,
+            "weight_decay": 0,
+            "amsgrad": false
+        }
+    },
+  
+    "trainer" : {
+        "type" : "사용할 Trainer",
+        "epochs": 1,
+        "metric": ["aucroc", "accuracy"],
+        "seed" : 22,
+        "save_dir": "/opt/ml/model",
+        "submission_dir": "/opt/ml/submission" 
+    }
+  }

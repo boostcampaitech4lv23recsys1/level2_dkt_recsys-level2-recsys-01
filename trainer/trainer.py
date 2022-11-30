@@ -9,7 +9,7 @@ import numpy as np
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from . import loss, metric, optimizer, scheduler
-from ..utils import MetricTracker
+from utils import MetricTracker
 from sklearn.metrics import roc_auc_score, accuracy_score
 import wandb
 
