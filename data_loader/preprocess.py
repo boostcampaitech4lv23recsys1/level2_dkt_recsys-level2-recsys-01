@@ -54,10 +54,11 @@ class Preprocess:
 
         for col in columns:
             if col in self.cat_cols:
-                tmp2idx = val2idx(data[col].unique().tolist())
-                tmp = data[col].map(tmp2idx)
-                data.loc[:, f"{col}2idx"] = tmp
-                data = data.drop([col], axis=1)
+                if col!='answerCode':
+                    tmp2idx = val2idx(data[col].unique().tolist())
+                    tmp = data[col].map(tmp2idx)
+                    data.loc[:, f"{col}2idx"] = tmp
+                    data = data.drop([col], axis=1)
     
         # data['userID'] = val2idx(data['userID'].unique().tolist()) # 얘를 해야함
         
