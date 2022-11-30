@@ -12,7 +12,7 @@ class BaseDataset(Dataset):
         super().__init__()
         # self.data = data[.loc[idx, :].reset_index(drop=True)]
         self.data = data[data['userID'].isin(idx)]
-        self.user_list = data['userID'].unique().tolist()
+        self.user_list = self.data['userID'].unique().tolist()
         self.config = config
         self.max_seq_len = config['dataset']['max_seq_len']
 

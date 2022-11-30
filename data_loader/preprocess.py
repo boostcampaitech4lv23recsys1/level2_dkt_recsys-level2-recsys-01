@@ -10,7 +10,7 @@ class Preprocess:
         self.cat_cols = config['cat_cols']
         self.num_cols = config['num_cols']
 
-        self.feature_engineering = ['userID', 'answerCode'] + self.cat_cols + self.num_cols
+        self.feature_engineering = ['userID', 'answerCode', 'testId'] + self.cat_cols + self.num_cols
 
         self.train_data = None
         self.test_data = None
