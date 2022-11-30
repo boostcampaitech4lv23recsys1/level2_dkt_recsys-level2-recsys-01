@@ -12,6 +12,7 @@ class BaseDataset(Dataset):
         super().__init__()
         # self.data = data[.loc[idx, :].reset_index(drop=True)]
         self.data = data[data['userID'].isin(idx)]
+        self.user_list = data['userID'].unique().tolist()
         self.config = config
         self.max_seq_len = config['dataset']['max_seq_len']
 
@@ -41,13 +42,14 @@ class BaseDataset(Dataset):
 
     # 총 데이터의 개수를 리턴
     def __len__(self) -> int:
-        return len(self.X_cat)+len(self.X_num)
+        # return len(self.X_cat)+len(self.X_num)
+        return len(self.user_list)
 
     # 인덱스를 입력받아 그에 맵핑되는 입출력 데이터를 파이토치의 Tensor 형태로 리턴
     def __getitem__(self, index: int) -> object:
-        print(self.X_cat)
-        cat = self.X_cat[index]
-        num = self.X_num[index]
+        user = self.user_list[index]
+        cat = self.X_cat[user]
+        num = self.X_num[user]
 
         cat_cols = [cat[i] for i in range(len(cat))]
         num_cols = [num[i].astype(str).astype(float) for i in range(len(num))]
@@ -65,6 +67,7 @@ class BaseDataset(Dataset):
         else:
             mask = np.zeros(self.max_seq_len, dtype=np.int16)
             mask[-seq_len:] = 1
+            y = torch.tensor(self.Y[index][:])
                 
         # mask도 columns 목록에 포함시킴
         cat_cols.append(mask)

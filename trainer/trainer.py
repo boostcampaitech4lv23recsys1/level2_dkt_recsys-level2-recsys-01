@@ -100,7 +100,7 @@ class BaseTrainer(object):
         Full training logic
         """
         # 고유 키 값 넣어주세요
-        key = None
+        key = '412d7505a821bf8637059949cb5119361aa83e80'
         
         wandb_logger.init(key, self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):

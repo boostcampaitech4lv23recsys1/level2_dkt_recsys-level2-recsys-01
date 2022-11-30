@@ -29,7 +29,8 @@ def main(config):
     model = getattr(models, config['arch']['type'])(config)
     print("---------------------------DONE MODEL LOADING---------------------------")
     kf = KFold(n_splits=config['preprocess']['num_fold'])
-    for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique())):
+    for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):
+        breakpoint()
         train_set = BaseDataset(data, train_idx, config)
         val_set = BaseDataset(data, val_idx, config)
         
