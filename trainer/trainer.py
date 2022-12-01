@@ -9,6 +9,7 @@ import numpy as np
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from . import loss, metric, optimizer, scheduler
+from logger import wandb_logger
 from utils import MetricTracker
 from sklearn.metrics import roc_auc_score, accuracy_score
 import wandb
@@ -24,13 +25,15 @@ class BaseTrainer(object):
         model: nn.Module,
         train_data_loader: DataLoader,
         valid_data_loader: DataLoader,
-        config,
+        config: dict,
+        fold: int
     ):
         self.model = model
         self.train_data_loader = train_data_loader
         self.valid_data_loader = valid_data_loader
         self.config = config
         self.cfg_trainer = config['trainer']
+        self.fold = fold
 
         self.device = config['device']
 
@@ -57,12 +60,12 @@ class BaseTrainer(object):
         """
         log = dict()
         self.model.train()
-        for batch_idx, (data, target) in enumerate(self.train_data_loader):
-            data, target = data.to(self.device), target.to(self.device)
-
+        for data in self.train_data_loader:
+            breakpoint()
+            target = data['answerCode'].to(self.device)
             
             output = self.model(data)
-            loss = self.criterion(output, target)
+            loss = self._compute_loss(output, target)
             self.train_metrics.update('loss', loss.item())
             for met in self.metric_ftns:
                 ftns = metric.get_metric(met)
@@ -77,8 +80,8 @@ class BaseTrainer(object):
         log.update(**{'train_'+k : v for k, v in train_log.items()})
 
         self.model.eval()
-        for batch_idx, (data, target) in enumerate(self.valid_data_loader):
-            data, target = data.to(self.device), target.to(self.device)
+        for data in self.valid_data_loader:
+            target = data['answerCode'].to(self.device)
 
             self.optimizer.zero_grad()
             output = self.model(data)
@@ -98,9 +101,9 @@ class BaseTrainer(object):
         Full training logic
         """
         # 고유 키 값 넣어주세요
-        key = None
+        # key = '412d7505a821bf8637059949cb5119361aa83e80'
         
-        wandb_logger.init(key, self.model, self.config)
+        # wandb_logger.init(key, self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):
             result = self._train_epoch(epoch)
             wandb.log(result, step=epoch)
@@ -125,8 +128,23 @@ class BaseTrainer(object):
         }
         save_path = os.path.join(self.save_dir, model_name)
         os.makedirs(save_path, exist_ok=True)
-        save_path = os.path.join(save_path, 'best_model.pt')
+        save_path = os.path.join(save_path, f'fold_{self.fold}_best_model.pt')
         torch.save(state, save_path)
+    
+    # loss계산하고 parameter update!
+    def _compute_loss(self, output, target):
+        """
+        Args :
+            preds   : (batch_size, max_seq_len)
+            targets : (batch_size, max_seq_len)
+
+        """
+        loss = self.criterion(output, target)
+
+        # 마지막 시퀀드에 대한 값만 loss 계산
+        loss = loss[:, -1]
+        loss = torch.mean(loss)
+        return loss
 
 class XGBoostTrainer:
     def __init__(
@@ -167,3 +185,4 @@ class XGBoostTrainer:
         auc = roc_auc_score(self.test_y, preds)
 
         print(f"VALID AUC : {auc} ACC : {acc}\n")
+
