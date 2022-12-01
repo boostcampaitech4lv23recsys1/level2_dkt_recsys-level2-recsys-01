@@ -30,6 +30,7 @@ def main(config):
     print("---------------------------DONE MODEL LOADING---------------------------")
     kf = KFold(n_splits=config['preprocess']['num_fold'])
     for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):
+        print(f"---------------------------{fold+1} FOLD START---------------------------")
         train_set = BaseDataset(data, train_idx, config)
         val_set = BaseDataset(data, val_idx, config)
         

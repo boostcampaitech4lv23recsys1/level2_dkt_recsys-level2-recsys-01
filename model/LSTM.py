@@ -19,17 +19,23 @@ class LSTM(nn.Module):
         self.cat_col_len = self.config['cat_col_len']
         self.dropout = nn.Dropout(self.dropout_rate)
         
-        self.embedding_answercode = nn.Embedding(3, self.embedding_dim)
+        self.embedding_answercode = nn.Embedding(3, self.embedding_dim, padding_idx=0)
         for cat_col in self.cat_cols:
-            self.embedding_cat_col[cat_col] = nn.Embedding(self.cat_col_len[cat_col] + 1, self.embedding_dim)
+            self.embedding_cat_col[cat_col] = nn.Embedding(self.cat_col_len[cat_col] + 1, self.embedding_dim, padding_idx=0)
         
         self.emb_cat_dict = nn.ModuleDict(self.embedding_cat_col)
         
-        self.cat_comb_proj = nn.Linear(self.embedding_dim * len(self.cat_cols), self.hidden_dim // 2)
-        self.num_comb_proj = nn.Linear(len(self.num_cols), self.hidden_dim // 2)
-
+        self.cat_comb_proj = nn.Sequential(
+            nn.Linear(self.embedding_dim * len(self.cat_cols), self.hidden_dim // 2),
+            nn.LayerNorm(self.hidden_dim // 2, eps=1e-6)
+        )
+        self.num_comb_proj = nn.Sequential(
+            nn.Linear(len(self.num_cols), self.hidden_dim // 2),
+            nn.LayerNorm(self.hidden_dim // 2, eps=1e-6)
+        )
+        
         self.lstm = nn.LSTM(
-            self.hidden_dim, self.hidden_dim, self.n_layers, batch_first=True, dropout = self.dropout_rate
+            self.hidden_dim, self.hidden_dim, self.n_layers, batch_first=True, dropout=self.dropout_rate
         )
 
         # Fully connected layer
@@ -53,7 +59,6 @@ class LSTM(nn.Module):
 
         cat_emb = torch.concat(cat_emb_list, dim = -1)
         cat_emb = self.cat_comb_proj(cat_emb)
-        breakpoint()
         num_emb = self.num_comb_proj(num_feature) # 마스크를 빼고 넣는다.
         X = torch.cat([cat_emb, num_emb], -1)
 

@@ -147,8 +147,8 @@ def collate_fn(samples):
     for sample in samples:
         cat += [pad_sequence(sample["cat"] + 1, max_len=max_len, padding_value=0)]
         num += [pad_sequence(sample["num"] + 1, max_len=max_len, padding_value=0)]
-        y += [pad_sequence(sample["answerCode"] + 1, max_len=max_len, padding_value=0)]
-
+        y += [pad_sequence(sample["answerCode"], max_len=max_len, padding_value=0)]
+    # breakpoint()
     return {
         "cat": torch.tensor(cat, dtype=torch.long),
         "num": torch.tensor(num, dtype=torch.float32),
