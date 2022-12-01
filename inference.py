@@ -2,7 +2,7 @@
 학습된 모델을 가져와서 submission 생성
 """
 from data_loader.preprocess import Preprocess
-from data_loader.dataset import BaseDataset
+from data_loader.dataset import BaseDataset, collate_fn
 from torch.utils.data import DataLoader
 
 import model as models
@@ -15,48 +15,50 @@ import numpy as np
 import argparse
 
 
-def inference_w_one_model(model, data_loader, config):
-    model.load_state_dict('모델 weight 경로 by config')
+def inference_w_one_model(model, data_loader, config, fold):
+    model_path = os.path.join(config['trainer']['save_dir'], config['arch']['type'])
+    model_path = os.path.join(model_path, f'fold_{fold}_best_model.pt')
+    state = torch.load(model_path)
+    model.load_state_dict(state['state_dict'])
     model.eval()
     device = config['device']
     predict_list = []
     with torch.no_grad():   
         for data in data_loader:
-            data = data.to(device)
             output = model(data)
             output = output.detach().cpu().numpy()
-            predict_list.append(output)
+            predict_list.append(output[:, -1][0])
     return predict_list
     
 def main(config):
-    if config.model_name == "LSTM":
+    if config['arch']['type'] == "LSTM":
         preprocess = Preprocess(config)
         test = preprocess.load_test_data()
         
-        model_args = config['arch']['args']
-        model_args.update({
-        'cat_cols': config['cat_cols'],
-        'num_cols': config['num_cols'], 
-        })
-        model = getattr(models, config['arch']['type'])(model_args)
+        model = getattr(models, config['arch']['type'])(config).to(config['device'])
         test_set = BaseDataset(test, range(len(test)), config)
         test_loader = DataLoader(
                     test_set,
-                    num_workers=config['num_workers'],
+                    num_workers=config['data_loader']['args']['num_workers'],
                     shuffle=False,
-                    batch_size=1
+                    batch_size=1,
+                    collate_fn=collate_fn
                     )                
-        k = config['kfold 지정한 fold 개수']
+        k = config['preprocess']['num_fold']
         final_predict = []
         for i in range(k):
-            predict = inference_w_one_model(model, test_loader, config)
+            predict = inference_w_one_model(model, test_loader, config, i+1)
             final_predict.append(predict)
         final_predict = np.array(final_predict)
         final_predict = final_predict.mean(axis=0)
-        
-        sub = pd.read_csv('config[sample_submission이 있는 경로]')
+        sample_sub_path = os.path.join(config['preprocess']['data_dir'], 'sample_submission.csv')
+        sub = pd.read_csv(sample_sub_path)
         sub['prediction'] = final_predict
-        sub.to_csv(f'./data/inference_{"데이터버전적어주세용"}') 
+        
+        sub_path = config['trainer']['submission_dir']
+        os.makedirs(sub_path, exist_ok=True)
+        sub_path = os.path.join(sub_path, f"inference_{config['preprocess']['data_ver']}.csv")
+        sub.to_csv(sub_path, index=None) 
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='DKT Dinosaur')

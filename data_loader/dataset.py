@@ -38,10 +38,9 @@ class BaseDataset(Dataset):
     # 인덱스를 입력받아 그에 맵핑되는 입출력 데이터를 파이토치의 Tensor 형태로 리턴
     def __getitem__(self, index: int) -> object:
         user = self.user_list[index]
-        cat = self.X_cat.get_group(user).values
-        num = self.X_num.get_group(user).values.astype(np.float32)
+        cat = self.X_cat.get_group(user).values[:, :-1]
+        num = self.X_num.get_group(user).values[:, :-1].astype(np.float32)
         y = self.Y.get_group(user).values
-
         # cat_cols = [cat[i] for i in range(cat.shape[1])]
         # num_cols = [num[i].astype(str).astype(float) for i in range(len(num))]
 
@@ -53,9 +52,9 @@ class BaseDataset(Dataset):
             y = torch.tensor(y[-self.max_seq_len :], dtype=torch.long)
             mask = torch.ones(self.max_seq_len, dtype=torch.long)
         else:
-            cat = torch.cat((torch.zeros(self.max_seq_len-seq_len, len(self.cur_cat_col), dtype=torch.long),
+            cat = torch.cat((torch.zeros(self.max_seq_len-seq_len, len(self.cur_cat_col)-1, dtype=torch.long),
                                             torch.tensor(cat, dtype=torch.long)))
-            num = torch.cat((torch.zeros(self.max_seq_len-seq_len, len(self.cur_num_col), dtype=torch.float32),
+            num = torch.cat((torch.zeros(self.max_seq_len-seq_len, len(self.cur_num_col)-1, dtype=torch.float32),
                                          torch.tensor(num, dtype=torch.float32)))
             y = torch.cat((torch.zeros(self.max_seq_len-seq_len, dtype=torch.long),
                            torch.tensor(y, dtype=torch.long)))
@@ -93,7 +92,6 @@ def get_loader(train_set, val_set, config):
         collate_fn=collate_fn,
     )
     return train_loader, valid_loader
-        # row = self.data[index]
       
 
 class XGBoostDataset(object):
