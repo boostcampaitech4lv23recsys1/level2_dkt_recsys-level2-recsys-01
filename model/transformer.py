@@ -85,7 +85,6 @@ class Transformer(nn.Module):
         )  # (batch_size, 1, max_len, max_len)
 
         out = self.encoder(X, mask)
-
         out = self.prediction(out)
 
         return out.squeeze(2)

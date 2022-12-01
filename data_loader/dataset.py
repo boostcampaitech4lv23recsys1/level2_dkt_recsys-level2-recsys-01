@@ -16,12 +16,6 @@ class BaseDataset(Dataset):
         self.config = config
         self.max_seq_len = config["dataset"]["max_seq_len"]
 
-        # def grouping_data(r, column):
-        #     result = []
-        #     for col in column:
-        #         result.append(np.array(r[col]))
-        #     return result
-
         self.Y = self.data.groupby("userID")["answerCode"]
 
         self.cur_cat_col = [f"{col}2idx" for col in config["cat_cols"]] + ["userID"]
@@ -39,29 +33,8 @@ class BaseDataset(Dataset):
         self.config = config
         self.max_seq_len = config['dataset']['max_seq_len']
 
-        # def grouping_data(r, column):
-        #     result = []
-        #     for col in column[:]:
-        #         result.append(np.array(r[col]))
-        #     return result
-        
-        # self.Y = self.data.apply(
-        #     grouping_data, column=["answerCode"]
-        # )
-        # self.data = self.data.drop(["answerCode2idx"], axis=1)
-
         self.cur_cat_col = [f'{col}2idx' for col in config['cat_cols']] + ['userID']
         self.cur_num_col = config['num_cols'] + ['userID']
-
-        # self.X_cat = self.data.loc[:, self.cur_cat_col].copy()
-        # self.X_num = self.data.loc[:, self.cur_num_col].copy()
-        #
-        # self.X_cat = self.X_cat.groupby("userID") \
-        #     .apply(grouping_data, column=self.cur_cat_col) \
-        #     .apply(lambda x: x[:-1])
-        # self.X_num = self.X_num.groupby("userID") \
-        #     .apply(grouping_data, column=self.cur_num_col) \
-        #     .apply(lambda x: x[:-1])
 
     # 총 데이터의 개수를 리턴
     def __len__(self) -> int:
@@ -74,10 +47,8 @@ class BaseDataset(Dataset):
         num = self.X_num.get_group(user).values.astype(np.float32)
         y = self.Y.get_group(user).values
 
-        # cat_cols = [cat[i] for i in range(cat.shape[1])]
-        # num_cols = [num[i].astype(str).astype(float) for i in range(len(num))]
-
         seq_len = cat.shape[0]
+
         # max seq len을 고려하여서 이보다 길면 자르고 아닐 경우 그대로 놔둔다
         if seq_len >= self.max_seq_len:
             cat = torch.tensor(cat[-self.max_seq_len :], dtype=torch.long)
