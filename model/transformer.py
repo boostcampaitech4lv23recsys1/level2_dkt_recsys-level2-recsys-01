@@ -59,6 +59,7 @@ class Transformer(nn.Module):
         # Embedding
         cat_feature = X['cat'].to(self.device)
         num_feature = X['num'].to(self.device)
+        mask = X['mask']
 
         # past
         cat_emb_list = []
