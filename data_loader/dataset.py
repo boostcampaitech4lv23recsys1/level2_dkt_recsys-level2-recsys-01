@@ -32,6 +32,37 @@ class BaseDataset(Dataset):
         self.X_cat = self.X_cat.groupby("userID")
         self.X_num = self.X_num.groupby("userID")
 
+        # self.data = data[.loc[idx, :].reset_index(drop=True)]
+        self.data = data[data['userID'].isin(idx)]
+        self.user_list = self.data['userID'].unique().tolist()
+        self.group_data = self.data.groupby("userID")
+        self.config = config
+        self.max_seq_len = config['dataset']['max_seq_len']
+
+        # def grouping_data(r, column):
+        #     result = []
+        #     for col in column[:]:
+        #         result.append(np.array(r[col]))
+        #     return result
+        
+        # self.Y = self.data.apply(
+        #     grouping_data, column=["answerCode"]
+        # )
+        # self.data = self.data.drop(["answerCode2idx"], axis=1)
+
+        self.cur_cat_col = [f'{col}2idx' for col in config['cat_cols']] + ['userID']
+        self.cur_num_col = config['num_cols'] + ['userID']
+
+        # self.X_cat = self.data.loc[:, self.cur_cat_col].copy()
+        # self.X_num = self.data.loc[:, self.cur_num_col].copy()
+        #
+        # self.X_cat = self.X_cat.groupby("userID") \
+        #     .apply(grouping_data, column=self.cur_cat_col) \
+        #     .apply(lambda x: x[:-1])
+        # self.X_num = self.X_num.groupby("userID") \
+        #     .apply(grouping_data, column=self.cur_num_col) \
+        #     .apply(lambda x: x[:-1])
+
     # 총 데이터의 개수를 리턴
     def __len__(self) -> int:
         return len(self.user_list)
@@ -101,6 +132,42 @@ def collate_fn(batch):
     }
 
 
+def pad_sequence(seq, max_len, padding_value = 0):
+    try:
+        seq_len, col = seq.shape
+        padding = np.zeros((max_len - seq_len, col)) + padding_value
+    except:
+        seq_len = seq.shape[0]
+        padding = np.zeros((max_len - seq_len, )) + padding_value
+
+    padding_seq = np.concatenate([padding, seq])
+
+    return padding_seq
+
+def collate_fn(samples):
+    max_len = 0
+    for sample in samples:
+        seq_len, col = sample['cat'].shape
+        if max_len < seq_len:
+            max_len = seq_len
+
+    cat = []
+    num = []
+    y = []
+
+    for sample in samples:
+        cat += [pad_sequence(sample["cat"] + 1, max_len=max_len, padding_value=0)]
+        num += [pad_sequence(sample["num"] + 1, max_len=max_len, padding_value=0)]
+        y += [pad_sequence(sample["answerCode"] + 1, max_len=max_len, padding_value=0)]
+
+    return {
+        "cat": torch.tensor(cat, dtype=torch.long),
+        "num": torch.tensor(num, dtype=torch.float32),
+        "answerCode": torch.tensor(y, dtype=torch.long),
+
+    }
+
+
 def get_loader(train_set, val_set, config):
     train_loader = DataLoader(
         train_set,
@@ -113,11 +180,10 @@ def get_loader(train_set, val_set, config):
         val_set,
         num_workers=config["num_workers"],
         shuffle=False,
-        batch_size=config["batch_size"],
+        batch_size=config['batch_size'],
         collate_fn=collate_fn,
     )
     return train_loader, valid_loader
-    # row = self.data[index]
 
 
 class XGBoostDataset(object):
