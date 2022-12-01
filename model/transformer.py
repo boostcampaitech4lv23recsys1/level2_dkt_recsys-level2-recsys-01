@@ -55,7 +55,7 @@ class Transformer(nn.Module):
         )
         self.prediction = nn.Sequential(nn.Linear(self.dim_model, 1), nn.Sigmoid())
     
-    def forward(self, X, attn_mask):
+    def forward(self, X):
         # Embedding
         cat_feature = X['cat'].to(self.device)
         num_feature = X['num'].to(self.device)

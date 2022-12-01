@@ -132,42 +132,6 @@ def collate_fn(batch):
     }
 
 
-def pad_sequence(seq, max_len, padding_value = 0):
-    try:
-        seq_len, col = seq.shape
-        padding = np.zeros((max_len - seq_len, col)) + padding_value
-    except:
-        seq_len = seq.shape[0]
-        padding = np.zeros((max_len - seq_len, )) + padding_value
-
-    padding_seq = np.concatenate([padding, seq])
-
-    return padding_seq
-
-def collate_fn(samples):
-    max_len = 0
-    for sample in samples:
-        seq_len, col = sample['cat'].shape
-        if max_len < seq_len:
-            max_len = seq_len
-
-    cat = []
-    num = []
-    y = []
-
-    for sample in samples:
-        cat += [pad_sequence(sample["cat"] + 1, max_len=max_len, padding_value=0)]
-        num += [pad_sequence(sample["num"] + 1, max_len=max_len, padding_value=0)]
-        y += [pad_sequence(sample["answerCode"] + 1, max_len=max_len, padding_value=0)]
-
-    return {
-        "cat": torch.tensor(cat, dtype=torch.long),
-        "num": torch.tensor(num, dtype=torch.float32),
-        "answerCode": torch.tensor(y, dtype=torch.long),
-
-    }
-
-
 def get_loader(train_set, val_set, config):
     train_loader = DataLoader(
         train_set,
