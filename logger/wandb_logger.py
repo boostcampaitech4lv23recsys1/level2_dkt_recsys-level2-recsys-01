@@ -3,7 +3,7 @@ logging을 관리해주는 wandb 함수
 """
 import wandb
 
-def init(key, model, config):
+def init(model, config):
     # wandb.login(key)
     wandb.init(project="test-project", entity="dkt-dinosaur")
     # wandb에 기록하고 싶은 정보는 json에서 가져다 update로 추가해줄 수 있다.
