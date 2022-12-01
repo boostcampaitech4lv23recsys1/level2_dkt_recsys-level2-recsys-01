@@ -53,7 +53,7 @@ def main(config):
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='DKT Dinosaur')
-    args.add_argument('-c', '--config', default='./config.json', type=str,
+    args.add_argument('-c', '--config', default='./LSTM_Test.json', type=str,
                       help='config 파일 경로 (default: "./config.json")')
     args = args.parse_args()
     config = read_json(args.config)
@@ -61,29 +61,3 @@ if __name__ == '__main__':
     config['device'] = "cuda" if torch.cuda.is_available() else "cpu"
 
     main(config)
-
-    if config.model_name == "XGBoost":
-        data = XGBoostDataset(config)
-        train, valid = data._split()
-        train_y = train["answerCode"]
-        train_X = train.drop(["answerCode"], axis=1)
-        valid_y = valid["answerCode"]
-        valid_X = valid.drop(["answerCode"], axis=1)
-
-        model = XGBoost().model
-
-        trainer = XGBoostTrainer(
-            model=model,
-            train_X=train_X,
-            train_y=train_y,
-            test_X=valid_X,
-            test_y=valid_y,
-            features=FEATURES,
-            early_stopping_rounds=100,
-            verbose=5,
-        )
-        trainer.train()
-
-
-if __name__ == "__main__":
-    main(CFG)

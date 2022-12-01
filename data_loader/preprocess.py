@@ -24,6 +24,7 @@ class Preprocess:
     def __preprocessing(self, data, is_train=True):
     
         columns = data.columns.tolist()
+        data = data.fillna(0)
         train = pd.read_csv(f"{self.cfg_preprocess['data_dir']}/train_{self.cfg_preprocess['data_ver']}.csv")
         trainusers = train['userID'].unique()
         
@@ -62,8 +63,6 @@ class Preprocess:
                     data = data.drop([col], axis=1)
         
         self.config['cat_col_len'] = { col: len(data[f'{col}2idx']) for col in self.cat_cols }
-                
-            
     
         # data['userID'] = val2idx(data['userID'].unique().tolist()) # 얘를 해야함
         
@@ -75,6 +74,7 @@ class Preprocess:
         return data
 
     def load_data_from_file(self):
+        ####################################### -> 이거 debug 빼야함
         df = pd.read_csv(f"{self.cfg_preprocess['data_dir']}/traintest_{self.cfg_preprocess['data_ver']}.csv")
         df = df.sort_values(by=["userID", "Timestamp"], axis=0)
         return df

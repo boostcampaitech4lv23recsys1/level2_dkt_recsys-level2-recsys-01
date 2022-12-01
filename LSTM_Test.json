@@ -27,7 +27,7 @@
         "args": {
             "batch_size" : 32,
             "num_workers" : 8,
-            "collate_fn" : "sequence_collate_fn"
+            "collate_fn" : "collate_fn"
         }
     },
   

@@ -66,6 +66,7 @@ class BaseTrainer(object):
             target = data['answerCode'].to(self.device)
             output = self.model(data)
             loss = self._compute_loss(output, target)
+            # target = target.detach().cpu()
             self.train_metrics.update('loss', loss.item())
             
             output = output[:, -1]
@@ -91,6 +92,7 @@ class BaseTrainer(object):
         total_outputs = []
         total_targets = []
         self.model.eval()
+        
         for data in self.valid_data_loader:
             target = data['answerCode'].to(self.device)
 
@@ -121,10 +123,8 @@ class BaseTrainer(object):
         """
         Full training logic
         """
-        # 고유 키 값 넣어주세요
-        key = '412d7505a821bf8637059949cb5119361aa83e80'
-        
-        wandb_logger.init(key, self.model, self.config)
+
+        wandb_logger.init(self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):
             print(f"---------------------------{epoch} TRAINING---------------------------")
             result = self._train_epoch(epoch)
