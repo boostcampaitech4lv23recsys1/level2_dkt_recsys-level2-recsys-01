@@ -52,7 +52,7 @@ class BaseTrainer(object):
         self.save_dir = self.cfg_trainer['save_dir']
         self.best_val_auc = 0
 
-    def _train_epoch(self, epoch):
+    def _train_epoch(self):
         """
         Training logic for an epoch
 
@@ -61,11 +61,16 @@ class BaseTrainer(object):
         log = dict()
         total_outputs = []
         total_targets = []
+
         self.model.train()
         for data in self.train_data_loader:
             target = data['answerCode'].to(self.device)
+
+            self.optimizer.zero_grad()
+
             output = self.model(data)
-            loss = self._compute_loss(output, target)
+            loss = self.criterion(output, target)
+            # loss = self._compute_loss(output, target)
             # target = target.detach().cpu()
             self.train_metrics.update('loss', loss.item())
             
@@ -74,9 +79,7 @@ class BaseTrainer(object):
             
             total_outputs.append(output.detach())
             total_targets.append(target.detach())
-            
-            # Backpropagation
-            self.optimizer.zero_grad()
+
             loss.backward()
             self.optimizer.step()
                 
@@ -99,7 +102,9 @@ class BaseTrainer(object):
 
             self.optimizer.zero_grad()
             output = self.model(data)
-            loss = self._compute_loss(output, target)
+
+            loss = self.criterion(output, target)
+            # loss = self._compute_loss(output, target)
             self.valid_metrics.update('loss', loss.item())
 
             output = output[:, -1]
@@ -128,7 +133,8 @@ class BaseTrainer(object):
 
         wandb_logger.init(self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):
-            result = self._train_epoch(epoch)
+            result = self._train_epoch()
+            breakpoint()
             wandb.log(result, step=epoch)
 
             if self.lr_scheduler:
