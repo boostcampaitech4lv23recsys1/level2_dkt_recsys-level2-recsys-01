@@ -7,27 +7,28 @@ import random
 
 import pandas as pd
 
+
 class BaseDataset(Dataset):
     def __init__(self, data, idx, config) -> None:
         super().__init__()
-        self.data = data[data['userID'].isin(idx)]
-        self.user_list = self.data['userID'].unique().tolist()
+        self.data = data[data["userID"].isin(idx)]
+        self.user_list = self.data["userID"].unique().tolist()
         self.config = config
-        self.max_seq_len = config['dataset']['max_seq_len']
+        self.max_seq_len = config["dataset"]["max_seq_len"]
 
         # def grouping_data(r, column):
         #     result = []
         #     for col in column:
         #         result.append(np.array(r[col]))
         #     return result
-        
-        self.Y = self.data.groupby('userID')['answerCode']
-        
-        self.cur_cat_col = [f'{col}2idx' for col in config['cat_cols']] + ['userID']
-        self.cur_num_col = config['num_cols'] + ['userID']
+
+        self.Y = self.data.groupby("userID")["answerCode"]
+
+        self.cur_cat_col = [f"{col}2idx" for col in config["cat_cols"]] + ["userID"]
+        self.cur_num_col = config["num_cols"] + ["userID"]
         self.X_cat = self.data.loc[:, self.cur_cat_col].copy()
         self.X_num = self.data.loc[:, self.cur_num_col].copy()
-        
+
         self.X_cat = self.X_cat.groupby("userID")
         self.X_num = self.X_num.groupby("userID")
 
@@ -48,58 +49,81 @@ class BaseDataset(Dataset):
         seq_len = cat.shape[0]
         # max seq len을 고려하여서 이보다 길면 자르고 아닐 경우 그대로 놔둔다
         if seq_len >= self.max_seq_len:
-            cat = torch.tensor(cat[-self.max_seq_len:], dtype=torch.long)
-            num = torch.tensor(num[-self.max_seq_len:], dtype=torch.float32)
+            cat = torch.tensor(cat[-self.max_seq_len :], dtype=torch.long)
+            num = torch.tensor(num[-self.max_seq_len :], dtype=torch.float32)
             y = torch.tensor(y[-self.max_seq_len :], dtype=torch.long)
             mask = torch.ones(self.max_seq_len, dtype=torch.long)
         else:
-            cat = torch.cat((torch.zeros(self.max_seq_len-seq_len, len(self.cur_cat_col), dtype=torch.long),
-                                            torch.tensor(cat, dtype=torch.long)))
-            num = torch.cat((torch.zeros(self.max_seq_len-seq_len, len(self.cur_num_col), dtype=torch.float32),
-                                         torch.tensor(num, dtype=torch.float32)))
-            y = torch.cat((torch.zeros(self.max_seq_len-seq_len, dtype=torch.long),
-                           torch.tensor(y, dtype=torch.long)))
+            cat = torch.cat(
+                (
+                    torch.zeros(
+                        self.max_seq_len - seq_len,
+                        len(self.cur_cat_col),
+                        dtype=torch.long,
+                    ),
+                    torch.tensor(cat, dtype=torch.long),
+                )
+            )
+            num = torch.cat(
+                (
+                    torch.zeros(
+                        self.max_seq_len - seq_len,
+                        len(self.cur_num_col),
+                        dtype=torch.float32,
+                    ),
+                    torch.tensor(num, dtype=torch.float32),
+                )
+            )
+            y = torch.cat(
+                (
+                    torch.zeros(self.max_seq_len - seq_len, dtype=torch.long),
+                    torch.tensor(y, dtype=torch.long),
+                )
+            )
             mask = torch.zeros(self.max_seq_len, dtype=torch.long)
             mask[-seq_len:] = 1
-            
-        return {"cat": cat, "num": num, "answerCode": y, "mask" : mask}
+
+        return {"cat": cat, "num": num, "answerCode": y, "mask": mask}
 
 
 def collate_fn(batch):
     X_cat, X_num, y, mask = [], [], [], []
     for user in batch:
-        X_cat.append(user['cat']) 
-        X_num.append(user['num'])
-        y.append(user['answerCode'])
-        mask.append(user['mask'])
-    return {"cat" : torch.stack(X_cat),
-            "num" : torch.stack(X_num),
-            "answerCode" : torch.stack(y),
-            'mask' : torch.stack(mask)}
-    
+        X_cat.append(user["cat"])
+        X_num.append(user["num"])
+        y.append(user["answerCode"])
+        mask.append(user["mask"])
+    return {
+        "cat": torch.stack(X_cat),
+        "num": torch.stack(X_num),
+        "answerCode": torch.stack(y),
+        "mask": torch.stack(mask),
+    }
+
+
 def get_loader(train_set, val_set, config):
     train_loader = DataLoader(
         train_set,
-        num_workers=0,
+        num_workers=config["num_workers"],
         shuffle=True,
-        batch_size=config['batch_size'],
+        batch_size=config["batch_size"],
         collate_fn=collate_fn,
     )
     valid_loader = DataLoader(
         val_set,
-        num_workers=0,
+        num_workers=config["num_workers"],
         shuffle=False,
-        batch_size=config['batch_size'],
+        batch_size=config["batch_size"],
         collate_fn=collate_fn,
     )
     return train_loader, valid_loader
-        # row = self.data[index]
-      
+    # row = self.data[index]
+
 
 class XGBoostDataset(object):
     def __init__(
-            self,
-            config,
+        self,
+        config,
     ):
         self.config = config
         self.train = self._load_train_data()
@@ -118,8 +142,8 @@ class XGBoostDataset(object):
         self.train = self.train.reset_index(drop=True)
 
     def _split(
-            self,
-            ratio=0.9,
+        self,
+        ratio=0.9,
     ):
         random.seed(42)
 
