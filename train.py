@@ -52,7 +52,7 @@ def main(config):
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='DKT Dinosaur')
-    args.add_argument('-c', '--config', default='./config.json', type=str,
+    args.add_argument('-c', '--config', default='./LSTM_Test.json', type=str,
                       help='config 파일 경로 (default: "./config.json")')
     args = args.parse_args()
     config = read_json(args.config)
