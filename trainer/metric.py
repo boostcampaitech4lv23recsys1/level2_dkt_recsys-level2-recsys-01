@@ -5,16 +5,18 @@ ex) Accuracy, NDCG, recall 등
 """
 
 import torch
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, accuracy_score
+import numpy as np
 
 
 def accuracy(output, target):
-    with torch.no_grad():
-        pred = torch.argmax(output, dim=1)
-        assert pred.shape[0] == len(target)
-        correct = 0
-        correct += torch.sum(pred == target).item()
-    return correct / len(target)
+    # with torch.no_grad():
+    #     pred = torch.argmax(output, dim=1)
+    #     assert pred.shape[0] == len(target)
+    #     correct = 0
+    #     correct += torch.sum(pred == target).item()
+    return accuracy_score(target, np.where(output >= 0.5, 1, 0))
+    # return correct / len(target)
 
 
 def top_k_acc(output, target, k=3):
@@ -28,8 +30,7 @@ def top_k_acc(output, target, k=3):
 
 
 def auc_roc(output, target):
-
-    raise NotImplementedError
+    return roc_auc_score(target, output)
 
 
 def get_metric(metric):

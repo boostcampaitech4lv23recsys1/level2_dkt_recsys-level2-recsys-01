@@ -10,7 +10,7 @@ class Preprocess:
         self.cat_cols = config['cat_cols']
         self.num_cols = config['num_cols']
 
-        self.feature_engineering = ['userID'] + self.cat_cols + self.num_cols
+        self.feature_engineering = ['userID', 'answerCode', 'testId'] + self.cat_cols + self.num_cols
 
         self.train_data = None
         self.test_data = None
@@ -24,6 +24,7 @@ class Preprocess:
     def __preprocessing(self, data, is_train=True):
     
         columns = data.columns.tolist()
+        data = data.fillna(0)
         train = pd.read_csv(f"{self.cfg_preprocess['data_dir']}/train_{self.cfg_preprocess['data_ver']}.csv")
         trainusers = train['userID'].unique()
         
@@ -52,6 +53,7 @@ class Preprocess:
                 val2idx[val] = idx + 1
             return val2idx
 
+        # 어차피 cat_cols일 경우만 돌아가는 거라면 columns가 아니라 cat_cols를 돌아도 되는거 아닌가?
         for col in columns:
             if col in self.cat_cols:
                 if col!='answerCode':
@@ -59,6 +61,8 @@ class Preprocess:
                     tmp = data[col].map(tmp2idx)
                     data.loc[:, f"{col}2idx"] = tmp
                     data = data.drop([col], axis=1)
+        
+        self.config['cat_col_len'] = { col: len(data[f'{col}2idx']) for col in self.cat_cols }
     
         # data['userID'] = val2idx(data['userID'].unique().tolist()) # 얘를 해야함
         
@@ -70,6 +74,7 @@ class Preprocess:
         return data
 
     def load_data_from_file(self):
+        ####################################### -> 이거 debug 빼야함
         df = pd.read_csv(f"{self.cfg_preprocess['data_dir']}/traintest_{self.cfg_preprocess['data_ver']}.csv")
         df = df.sort_values(by=["userID", "Timestamp"], axis=0)
         return df
