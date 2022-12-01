@@ -3,15 +3,15 @@
     "project" : "dkt-dinosaur-test",
     "entity" : "LSTM_test",
     
-    "cat_cols" : ["answerCode", "KnowledgeTag", "question_number", "testId","test_cat", "test_id", "test_month", "test_day", "test_hour"], 
-    "num_cols" : ["elapsed_time", "time_question_median", "time_user_median", "time_user_mean", "question_numslen", 
-                  "user_acc", "test_acc", "tag_acc", "question_acc", "month_acc", "hour_acc", "exp_test", "exp_tag",
-                  "exp_question", "ans_cumsum", "continuous_user", "continuous_test"],
+    "cat_cols" : ["KnowledgeTag", "question_number", "test_cat", "test_id", "test_month", "test_day", "test_hour", "week_num"], 
+    "num_cols" : ["elapsed_time", "time_question_median",  "question_numslen", 
+                   "tag_acc", "month_acc", "hour_acc", "exp_test", "exp_tag",
+                  "exp_question", "ans_cumsum", "continuous_test"],
   
   
     "preprocess": {
           "data_dir" : "./data",
-          "data_ver" : "v1.1",
+          "data_ver" : "v2.1",
           "fe_elapsed_time": [200, "mean"],
           "use_k_fold": true,
           "num_fold" : 5
@@ -27,7 +27,7 @@
         "args": {
             "batch_size" : 32,
             "num_workers" : 8,
-            "collate_fn" : "sequence_collate_fn"
+            "collate_fn" : "collate_fn"
         }
     },
   
@@ -42,7 +42,7 @@
         }
     },
   
-    "loss" : "nll_loss",
+    "loss" : "bce",
   
     "optimizer" : {
         "type": "adam",
