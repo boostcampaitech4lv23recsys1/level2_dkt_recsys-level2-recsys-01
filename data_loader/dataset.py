@@ -82,7 +82,7 @@ class BaseDataset(Dataset):
         if seq_len >= self.max_seq_len:
             cat = torch.tensor(cat[-self.max_seq_len :], dtype=torch.long)
             num = torch.tensor(num[-self.max_seq_len :], dtype=torch.float32)
-            y = torch.tensor(y[-self.max_seq_len :], dtype=torch.long)
+            y = torch.tensor(y[-self.max_seq_len :], dtype=torch.float32)
             mask = torch.ones(self.max_seq_len, dtype=torch.long)
         else:
             cat = torch.cat(
@@ -107,8 +107,8 @@ class BaseDataset(Dataset):
             )
             y = torch.cat(
                 (
-                    torch.zeros(self.max_seq_len - seq_len, dtype=torch.long),
-                    torch.tensor(y, dtype=torch.long),
+                    torch.zeros(self.max_seq_len - seq_len, dtype=torch.float32),
+                    torch.tensor(y, dtype=torch.float32),
                 )
             )
             mask = torch.zeros(self.max_seq_len, dtype=torch.long)
