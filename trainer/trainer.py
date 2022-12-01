@@ -68,7 +68,10 @@ class BaseTrainer(object):
             self.train_metrics.update('loss', loss.item())
             for met in self.metric_ftns:
                 ftns = metric.get_metric(met)
-                self.train_metrics.update(met, ftns(output, target))
+                breakpoint()
+                output_to_cpu = output.detach().cpu().numpy()
+                target_to_cpu = target.detach().cpu().numpy()
+                self.train_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
 
             # Backpropagation
             self.optimizer.zero_grad()

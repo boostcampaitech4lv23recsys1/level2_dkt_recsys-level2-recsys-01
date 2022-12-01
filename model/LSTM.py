@@ -53,8 +53,8 @@ class LSTM(nn.Module):
 
         cat_emb = torch.concat(cat_emb_list, dim = -1)
         cat_emb = self.cat_comb_proj(cat_emb)
-        
-        num_emb = self.num_comb_proj(num_feature[:, :, :-1]) # 마스크를 빼고 넣는다.
+        breakpoint()
+        num_emb = self.num_comb_proj(num_feature) # 마스크를 빼고 넣는다.
         X = torch.cat([cat_emb, num_emb], -1)
 
         out, _ = self.lstm(self.dropout(X))

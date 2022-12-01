@@ -28,8 +28,8 @@ class BaseDataset(Dataset):
         # )
         # self.data = self.data.drop(["answerCode2idx"], axis=1)
 
-        self.cur_cat_col = [f'{col}2idx' for col in config['cat_cols']] + ['userID']
-        self.cur_num_col = config['num_cols'] + ['userID']
+        self.cur_cat_col = [f'{col}2idx' for col in config['cat_cols']]
+        self.cur_num_col = config['num_cols']
         # self.X_cat = self.data.loc[:, self.cur_cat_col].copy()
         # self.X_num = self.data.loc[:, self.cur_num_col].copy()
         #
