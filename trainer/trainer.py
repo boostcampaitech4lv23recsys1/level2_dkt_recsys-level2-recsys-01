@@ -59,38 +59,63 @@ class BaseTrainer(object):
         :param epoch: Current epoch number
         """
         log = dict()
+        total_outputs = []
+        total_targets = []
         self.model.train()
         for data in self.train_data_loader:
-            breakpoint()
             target = data['answerCode'].to(self.device)
-            
             output = self.model(data)
             loss = self._compute_loss(output, target)
+            # target = target.detach().cpu()
             self.train_metrics.update('loss', loss.item())
-            for met in self.metric_ftns:
-                ftns = metric.get_metric(met)
-                self.train_metrics.update(met, ftns(output, target))
-
+            
+            output = output[:, -1]
+            target = target[:, -1]
+            
+            total_outputs.append(output.detach())
+            total_targets.append(target.detach())
+            
             # Backpropagation
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-        
+                
+        for met in self.metric_ftns:
+            ftns = metric.get_metric(met)
+            output_to_cpu = torch.cat(total_outputs).cpu().numpy()
+            target_to_cpu = torch.cat(total_targets).cpu().numpy()
+            
+            self.train_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
+            
         train_log = self.train_metrics.result()
         log.update(**{'train_'+k : v for k, v in train_log.items()})
 
+        total_outputs = []
+        total_targets = []
         self.model.eval()
+        
         for data in self.valid_data_loader:
             target = data['answerCode'].to(self.device)
 
             self.optimizer.zero_grad()
             output = self.model(data)
-            loss = self.criterion(output, target)
+            loss = self._compute_loss(output, target)
             self.valid_metrics.update('loss', loss.item())
-            for met in self.metric_ftns:
-                ftns = metric.get_metric(met)
-                self.valid_metrics.update(met, ftns(output, target))
 
+            output = output[:, -1]
+            target = target[:, -1]
+
+            total_outputs.append(output.detach())
+            total_targets.append(target.detach())
+
+        for met in self.metric_ftns:
+            ftns = metric.get_metric(met)
+            # breakpoint()
+            output_to_cpu = torch.cat(total_outputs).cpu().numpy()
+            target_to_cpu = torch.cat(total_targets).cpu().numpy()
+            
+            self.valid_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
+            
         val_log = self.valid_metrics.result()
         log.update(**{'val_'+k : v for k, v in val_log.items()})
 
@@ -100,10 +125,8 @@ class BaseTrainer(object):
         """
         Full training logic
         """
-        # 고유 키 값 넣어주세요
-        # key = '412d7505a821bf8637059949cb5119361aa83e80'
-        
-        # wandb_logger.init(key, self.model, self.config)
+
+        wandb_logger.init(self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):
             result = self._train_epoch(epoch)
             wandb.log(result, step=epoch)
