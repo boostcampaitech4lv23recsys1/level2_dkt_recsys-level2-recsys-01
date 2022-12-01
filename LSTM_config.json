@@ -56,7 +56,7 @@
         "epochs": 1,
         "metric": ["aucroc", "accuracy"],
         "seed" : 22,
-        "save_dir": "/opt/ml/model",
-        "submission_dir": "/opt/ml/submission" 
+        "save_dir": "./saved_model",
+        "submission_dir": "./submission"
     }
   }

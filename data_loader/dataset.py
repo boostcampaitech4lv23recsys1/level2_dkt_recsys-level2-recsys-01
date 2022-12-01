@@ -79,14 +79,14 @@ def collate_fn(batch):
 def get_loader(train_set, val_set, config):
     train_loader = DataLoader(
         train_set,
-        num_workers=0,
+        num_workers=config['num_workers'],
         shuffle=True,
         batch_size=config['batch_size'],
         collate_fn=collate_fn,
     )
     valid_loader = DataLoader(
         val_set,
-        num_workers=0,
+        num_workers=config['num_workers'],
         shuffle=False,
         batch_size=config['batch_size'],
         collate_fn=collate_fn,
