@@ -15,6 +15,7 @@ class BaseDataset(Dataset):
         self.config = config
         self.max_seq_len = config['dataset']['max_seq_len']
 
+        breakpoint()
         # def grouping_data(r, column):
         #     result = []
         #     for col in column:
@@ -49,44 +50,47 @@ class BaseDataset(Dataset):
 
         # max seq len을 고려하여서 이보다 길면 자르고 아닐 경우 그대로 놔둔다
         if seq_len >= self.max_seq_len:
-            cat = cat[-self.max_seq_len:]
-            num = num[-self.max_seq_len:]
-            y = torch.tensor(y[-self.max_seq_len :])
-            mask = np.ones(self.max_seq_len, dtype=np.int16)
+            cat = torch.tensor(cat[-self.max_seq_len:], dtype=torch.long)
+            num = torch.tensor(num[-self.max_seq_len:], dtype=torch.float32)
+            y = torch.tensor(y[-self.max_seq_len :], dtype=torch.long)
+            mask = torch.ones(self.max_seq_len, dtype=torch.long)
         else:
             cat = torch.cat([torch.zeros(self.max_seq_len-seq_len),
-                                            torch.tensor(cat)])
+                                            torch.tensor(cat, dtype=torch.long)])
             num = torch.cat([torch.zeros(self.max_seq_len-seq_len),
-                                         torch.tensor(num)])
+                                         torch.tensor(num)], type=torch.float32)
             y = torch.cat([torch.zeros(self.max_seq_len-seq_len),
-                           torch.tensor(y)])
-            mask = np.zeros(self.max_seq_len, dtype=np.int16)
+                           torch.tensor(y)], dtype=torch.long)
+            mask = torch.zeros(self.max_seq_len, dtype=torch.long)
             mask[-seq_len:] = 1
             
         return {"cat": cat, "num": num, "answerCode": y, "mask" : mask}
 
 
 def collate_fn(batch):
-    X_cat, X_num, y = [], [], []
+    X_cat, X_num, y, mask = [], [], [], []
     for user in batch:
-        X_cat += user['cat'] # torch.stack으로 쌓아야할것같은데
-        X_num += user['num']
-        y += user['answerCode']
-    return {"cat" : X_cat,
-            "num" : X_num,
-            "answerCode" : y}
+        X_cat.append(user['cat']) # torch.stack으로 쌓아야할것같은데
+        X_num.append(user['num'])
+        y.append(user['answerCode'])
+        mask.append(user['mask'])
+    breakpoint()
+    return {"cat" : torch.stack(X_cat),
+            "num" : torch.stack(X_num),
+            "answerCode" : torch.stack(y),
+            'mask' : torch.stack(mask)}
     
 def get_loader(train_set, val_set, config):
     train_loader = DataLoader(
         train_set,
-        num_workers=config['num_workers'],
+        num_workers=0,
         shuffle=True,
         batch_size=config['batch_size'],
         collate_fn=collate_fn,
     )
     valid_loader = DataLoader(
         val_set,
-        num_workers=config['num_workers'],
+        num_workers=0,
         shuffle=False,
         batch_size=config['batch_size'],
         collate_fn=collate_fn,
