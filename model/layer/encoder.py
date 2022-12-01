@@ -1,4 +1,4 @@
-from layers import EncoderLayer
+from .layers import EncoderLayer
 import torch
 import torch.nn as nn
 
@@ -13,9 +13,7 @@ class Encoder(nn.Module):
             n_layers,
     ):
         super(Encoder, self).__init__()
-
-        self.embedding
-
+        
         self.layers = nn.ModuleList(
             [EncoderLayer(
                 dim_model=dim_model,
@@ -26,5 +24,8 @@ class Encoder(nn.Module):
         )
 
     def forward(self, x, attn_mask):
-        x = self.embed
+        for encoder_layer in self.layers:
+            x, _ = encoder_layer(x, attn_mask)
+            
+        return x
 

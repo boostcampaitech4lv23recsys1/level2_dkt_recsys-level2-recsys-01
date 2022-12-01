@@ -26,7 +26,18 @@ def main(config):
     data = preprocess.load_train_data()
     print("---------------------------DONE PREPROCESSING---------------------------")
     
-    model = getattr(models, config['arch']['type'])(config).to(config['device'])
+    if config["arch"]["type"] == "Transformer":
+        model_config = config["arch"]["args"]
+        model = getattr(models, config['arch']['type'])(
+            dim_model=model_config["dim_model"],
+            dim_ffn=model_config["dim_ffn"],
+            num_heads=model_config["num_heads"],
+            n_layers=model_config["n_layers"],
+            dropout_rate=model_config["dropout_rate"],
+            embedding_dim=model_config["embedding_dim"],
+            device=config["device"],
+            config=config,
+            ).to(config['device'])
     print("---------------------------DONE MODEL LOADING---------------------------")
     kf = KFold(n_splits=config['preprocess']['num_fold'])
     for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):

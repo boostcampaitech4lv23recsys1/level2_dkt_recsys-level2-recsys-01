@@ -4,11 +4,11 @@ import torch.nn.functional as F
 
 
 class ScaledDotProductAttention(nn.Module):
-    def __init__(self, dim_model, drop_out_rate):
+    def __init__(self, dim_model, dropout_rate):
         super(ScaledDotProductAttention, self).__init__()
 
         self.dim_model = dim_model
-        self.dropout = nn.Dropout(drop_out_rate)
+        self.dropout = nn.Dropout(dropout_rate)
 
     def forward(self, q, k, v, mask=None):
         attn = torch.matmul(q, k.transpose(-1, -2)) / torch.sqrt(self.dim_model)
@@ -22,7 +22,7 @@ class ScaledDotProductAttention(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, num_heads, dim_model, drop_out_rate):
+    def __init__(self, num_heads, dim_model, dropout_rate):
         assert dim_model % num_heads == 0
         super(MultiHeadAttention, self).__init__()
 
@@ -31,14 +31,14 @@ class MultiHeadAttention(nn.Module):
         self.dim_model = dim_model
         self.attention = ScaledDotProductAttention(
             dim_model=dim_model,
-            drop_out_rate=drop_out_rate
+            dropout_rate=dropout_rate
         )
 
         self.w_q = nn.Linear(dim_model, dim_model, bias=True)
         self.w_k = nn.Linear(dim_model, dim_model, bias=True)
         self.w_v = nn.Linear(dim_model, dim_model, bias=True)
 
-        self.dropout = nn.Dropout(drop_out_rate)
+        self.dropout = nn.Dropout(dropout_rate)
 
     def forward(self, q, k, v, attn_mask=None):
         batch_size = v.size(0)

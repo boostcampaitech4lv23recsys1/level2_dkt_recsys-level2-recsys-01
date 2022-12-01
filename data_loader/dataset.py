@@ -68,7 +68,7 @@ class BaseDataset(Dataset):
 def collate_fn(batch):
     X_cat, X_num, y, mask = [], [], [], []
     for user in batch:
-        X_cat.append(user['cat']) # torch.stack으로 쌓아야할것같은데
+        X_cat.append(user['cat']) 
         X_num.append(user['num'])
         y.append(user['answerCode'])
         mask.append(user['mask'])
