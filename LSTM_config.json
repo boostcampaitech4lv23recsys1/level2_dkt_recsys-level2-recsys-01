@@ -1,7 +1,6 @@
 {
-    "name": "LSTM_test",
-    "project" : "dkt-dinosaur-test",
-    "entity" : "LSTM_test",
+    "project" : "LSTM",
+    "entity" : "dkt-dinosaur",
     
     "cat_cols" : ["KnowledgeTag", "question_number", "test_cat", "test_id", "test_month", "test_day", "test_hour", "week_num"], 
     "num_cols" : ["elapsed_time", "time_question_median",  "question_numslen", 
@@ -54,7 +53,6 @@
     },
   
     "trainer" : {
-        "type" : "사용할 Trainer",
         "epochs": 1,
         "metric": ["aucroc", "accuracy"],
         "seed" : 22,

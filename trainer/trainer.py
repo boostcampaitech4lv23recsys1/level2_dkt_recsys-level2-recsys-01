@@ -87,7 +87,7 @@ class BaseTrainer(object):
             
             self.train_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
         train_log = self.train_metrics.result()
-        log.update(**{'train_'+k : v for k, v in train_log.items()})
+        log.update(**{f'fold_{self.fold}_train_{k}' : v for k, v in train_log.items()})
 
         total_outputs = []
         total_targets = []
@@ -115,7 +115,7 @@ class BaseTrainer(object):
             
             self.valid_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
         val_log = self.valid_metrics.result()
-        log.update(**{'val_'+k : v for k, v in val_log.items()})
+        log.update(**{f'fold_{self.fold}_val_{k}' : v for k, v in val_log.items()})
 
         return log
 
@@ -133,8 +133,8 @@ class BaseTrainer(object):
             if self.lr_scheduler:
                 self.lr_scheduler.step()
 
-            if result['val_aucroc'] > self.best_val_auc:
-                self.best_val_auc = result['val_aucroc']
+            if result[f'fold_{self.fold}_val_aucroc'] > self.best_val_auc:
+                self.best_val_auc = result[f'fold_{self.fold}_val_aucroc']
                 self._save_checkpoint(epoch)
 
     def _save_checkpoint(self, epoch):
