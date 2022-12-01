@@ -40,16 +40,16 @@ class BaseDataset(Dataset):
     def __getitem__(self, index: int) -> object:
         user = self.user_list[index]
         cat = self.X_cat.get_group(user).values
-        num = self.X_num.get_group(user).values
+        num = self.X_num.get_group(user).values.astype(np.float32)
         y = self.Y.get_group(user).values
 
         # cat_cols = [cat[i] for i in range(cat.shape[1])]
         # num_cols = [num[i].astype(str).astype(float) for i in range(len(num))]
 
         seq_len = cat.shape[0]
-
         # max seq len을 고려하여서 이보다 길면 자르고 아닐 경우 그대로 놔둔다
         if seq_len >= self.max_seq_len:
+            
             cat = torch.tensor(cat[-self.max_seq_len:], dtype=torch.long)
             num = torch.tensor(num[-self.max_seq_len:], dtype=torch.float32)
             y = torch.tensor(y[-self.max_seq_len :], dtype=torch.long)

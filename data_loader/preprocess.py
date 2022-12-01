@@ -75,7 +75,7 @@ class Preprocess:
 
     def load_data_from_file(self):
         ####################################### -> 이거 debug 빼야함
-        df = pd.read_csv(f"{self.cfg_preprocess['data_dir']}/traintest_debug_{self.cfg_preprocess['data_ver']}.csv")
+        df = pd.read_csv(f"{self.cfg_preprocess['data_dir']}/traintest_{self.cfg_preprocess['data_ver']}.csv")
         df = df.sort_values(by=["userID", "Timestamp"], axis=0)
         return df
 

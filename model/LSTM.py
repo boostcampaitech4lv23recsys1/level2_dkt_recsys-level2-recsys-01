@@ -51,7 +51,7 @@ class LSTM(nn.Module):
         for idx, cat_col in enumerate(self.cat_cols):
             cat_emb_list.append(self.emb_cat_dict[cat_col](cat_feature[:, :, idx])) # 데이터에 따라 수정
 
-        cat_emb = torch.concat(cat_emb_list, dim = -1)
+        cat_emb = torch.cat(cat_emb_list, dim = -1)
         cat_emb = self.cat_comb_proj(cat_emb)
         
         num_emb = self.num_comb_proj(num_feature[:, :, :-1]) # 마스크를 빼고 넣는다.
