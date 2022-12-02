@@ -130,6 +130,7 @@ class BaseTrainer(object):
 
         wandb_logger.init(self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):
+            print(f"----------{epoch} epoch start----------")
             result = self._train_epoch()
             wandb.log(result, step=epoch)
 
