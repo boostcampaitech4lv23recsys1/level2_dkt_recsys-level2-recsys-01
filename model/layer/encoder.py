@@ -28,6 +28,6 @@ class Encoder(nn.Module):
 
     def forward(self, x, attn_mask):
         for encoder_layer in self.layers:
-            x, attn = encoder_layer(x, attn_mask)
+            x = encoder_layer(x, attn_mask)
 
-        return x, attn
+        return x

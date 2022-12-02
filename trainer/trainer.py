@@ -13,6 +13,7 @@ from logger import wandb_logger
 from utils import MetricTracker
 from sklearn.metrics import roc_auc_score, accuracy_score
 import wandb
+from tqdm import tqdm
 
 
 class BaseTrainer(object):
@@ -52,7 +53,7 @@ class BaseTrainer(object):
         self.save_dir = self.cfg_trainer['save_dir']
         self.best_val_auc = 0
 
-    def _train_epoch(self, epoch):
+    def _train_epoch(self):
         """
         Training logic for an epoch
 
@@ -61,8 +62,9 @@ class BaseTrainer(object):
         log = dict()
         total_outputs = []
         total_targets = []
+
         self.model.train()
-        for data in self.train_data_loader:
+        for data in tqdm(self.train_data_loader):
             target = data['answerCode'].to(self.device)
             output = self.model(data)
             loss = self._compute_loss(output, target)
@@ -74,7 +76,7 @@ class BaseTrainer(object):
             
             total_outputs.append(output.detach())
             total_targets.append(target.detach())
-            
+
             # Backpropagation
             self.optimizer.zero_grad()
             loss.backward()
@@ -93,8 +95,9 @@ class BaseTrainer(object):
         total_outputs = []
         total_targets = []
         self.model.eval()
-        
-        for data in self.valid_data_loader:
+
+        print("----------valid set----------")
+        for data in tqdm(self.valid_data_loader):
             target = data['answerCode'].to(self.device)
 
             self.optimizer.zero_grad()
@@ -110,7 +113,6 @@ class BaseTrainer(object):
 
         for met in self.metric_ftns:
             ftns = metric.get_metric(met)
-            # breakpoint()
             output_to_cpu = torch.cat(total_outputs).cpu().numpy()
             target_to_cpu = torch.cat(total_targets).cpu().numpy()
             
@@ -128,7 +130,8 @@ class BaseTrainer(object):
 
         wandb_logger.init(self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):
-            result = self._train_epoch(epoch)
+            print(f"----------{epoch} epoch start----------")
+            result = self._train_epoch()
             wandb.log(result, step=epoch)
 
             if self.lr_scheduler:
@@ -164,9 +167,9 @@ class BaseTrainer(object):
         """
         loss = self.criterion(output, target)
 
-        # 마지막 시퀀드에 대한 값만 loss 계산
-        loss = loss[:, -1]
-        loss = torch.mean(loss)
+        # # 마지막 시퀀드에 대한 값만 loss 계산
+        # loss = loss[:, -1]
+        # loss = torch.mean(loss)
         return loss
 
 class XGBoostTrainer:

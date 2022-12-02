@@ -43,8 +43,8 @@
   "data_loader": {
     "type": "사용할 DataLoader",
     "args": {
-      "batch_size": 1,
-      "num_workers": 8,
+      "batch_size": 16,
+      "num_workers": 4,
       "collate_fn": "collate_fn"
     }
   },
@@ -54,7 +54,7 @@
     "args": {
       "dim_model": 128,
       "dim_ffn": 64,
-      "embedding_dim": 128,
+      "embedding_dim": 64,
       "num_heads": 2,
       "n_layers": 1,
       "dropout_rate": 0.2
@@ -76,7 +76,7 @@
     "type": "사용할 Trainer",
     "epochs": 1,
     "metric": ["aucroc", "accuracy"],
-    "seed": 22,
+    "seed": 42,
     "save_dir": "/opt/ml/model",
     "submission_dir": "/opt/ml/submission"
   }

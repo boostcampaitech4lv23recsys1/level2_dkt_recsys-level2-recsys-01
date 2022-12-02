@@ -22,14 +22,14 @@ class PositionalEncoding(nn.Module):
 
 
 class PositionwiseFeedForwardNet(nn.Module):
-    def __init__(self, d_model, d_ffn, drop_out=0.1):
+    def __init__(self, dim_model, dim_ffn, dropout_rate=0.1):
         super(PositionalEncoding, self).__init__()
 
         self.sequential = nn.Sequential(
-            nn.Linear(d_model, d_ffn, bias=True),
+            nn.Linear(dim_model, dim_ffn, bias=True),
             nn.ReLU(),
-            nn.Dropout(p=drop_out),
-            nn.Linear(d_ffn, d_model, bias=True),
+            nn.Dropout(p=dropout_rate),
+            nn.Linear(dim_ffn, dim_model, bias=True),
         )
 
     def forward(self, x):

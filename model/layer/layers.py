@@ -37,6 +37,7 @@ class MultiHeadAttention(nn.Module):
         self.w_q = nn.Linear(dim_model, dim_model, bias=True)
         self.w_k = nn.Linear(dim_model, dim_model, bias=True)
         self.w_v = nn.Linear(dim_model, dim_model, bias=True)
+        self.w_o = nn.Linear(dim_model, dim_model)
 
         self.dropout = nn.Dropout(dropout_rate)
 
@@ -67,6 +68,8 @@ class MultiHeadAttention(nn.Module):
             .view(batch_size, -1, self.num_heads * self.dim_head)
         )
 
+        output = self.w_o(output)
+
         return output, attn
 
 
@@ -74,18 +77,24 @@ class PositionWiseFeedForward(nn.Module):
     def __init__(self, dim_model, dim_ffn, dropout_rate):
         super(PositionWiseFeedForward, self).__init__()
 
-        self.sequential = nn.Sequential(
-            nn.Linear(dim_model, dim_ffn, bias=True),
-            nn.ReLU(),
-            nn.Dropout(p=dropout_rate),
-            nn.Linear(dim_ffn, dim_model, bias=True),
-        )
-        # self.w1 = nn.Linear(dim_model, dim_model)
-        # self.w2 = nn.Linear(dim_model, dim_model)
-        # self.dropout = nn.Dropout(dropout_rate)
+        # self.sequential = nn.Sequential(
+        #     nn.Linear(dim_model, dim_ffn, bias=True),
+        #     nn.ReLU(),
+        #     nn.Dropout(p=dropout_rate),
+        #     nn.Linear(dim_ffn, dim_model, bias=True),
+        # )
+        self.w1 = nn.Linear(dim_model, dim_model)
+        self.w2 = nn.Linear(dim_model, dim_model)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(dropout_rate)
 
     def forward(self, x):
-        return self.sequential(x)
+        x = self.w1(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+        x = self.w2(x)
+
+        return x
 
 
 class EncoderLayer(nn.Module):
@@ -95,21 +104,24 @@ class EncoderLayer(nn.Module):
         self.attention = MultiHeadAttention(
             dim_model=dim_model, num_heads=num_heads, dropout_rate=dropout_rate
         )
+        self.norm_attn = nn.LayerNorm(dim_model)
+        self.dropout_attn = nn.Dropout(dropout_rate)
 
         self.ffn = PositionWiseFeedForward(
             dim_model=dim_model, dim_ffn=dim_ffn, dropout_rate=dropout_rate
         )
-        self.norm = nn.LayerNorm(dim_model)
-        self.dropout = nn.Dropout(p=dropout_rate)
+        self.norm_ffn = nn.LayerNorm(dim_model)
+        self.dropout_ffn = nn.Dropout(p=dropout_rate)
 
     def forward(self, x, attn_mask):
         output, attn = self.attention(q=x, k=x, v=x, attn_mask=attn_mask)
-        output = self.norm(output + x)
-        output = self.dropout(output)
+        output = self.norm_attn(output + x)
+        output = self.dropout_attn(output)
 
         # ffn을 단어마다 하는 경우가 있는것을 발견 학습안될때 참고
+        res_x = output
         output = self.ffn(output)
-        output = self.norm(output + x)
-        output = self.dropout(output)
+        output = self.norm_ffn(output + res_x)
+        output = self.dropout_ffn(output)
 
-        return output, attn
+        return output
