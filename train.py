@@ -27,7 +27,7 @@ def main(config):
     wandb_train_func = functools.partial(
         run_kfold, config["preprocess"]["num_fold"], config, data
     )
-    print("---------------------------START TRAINING---------------------------")
+    print("-----------------------------START TRAINING------------------------------")
     if "sweep" in config:
         sweep_id = wandb.sweep(config["sweep"])
         wandb.agent(sweep_id, wandb_train_func, count=1)
@@ -41,10 +41,10 @@ def run_kfold(k, config, data):
     now = datetime.now(timezone("Asia/Seoul")).strftime(f"%Y-%m-%d_%H:%M")
     for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):
         print(
-            f"--------------------------START FOLD {fold + 1} TRAINING--------------------------"
+            f"-------------------------START FOLD {fold + 1} TRAINING---------------------------"
         )
         print(
-            f"---------------------------START FOLD {fold + 1} MODEL LOADING---------------------------"
+            f"-------------------------START FOLD {fold + 1} MODEL LOADING----------------------"
         )
         
         if config["arch"]["type"] == "Transformer":
@@ -77,7 +77,7 @@ def run_kfold(k, config, data):
         if config['arch']['type'] == "LSTM":
             model = getattr(models, config['arch']['type'])(config).to(config['device'])
             
-        print("---------------------------DONE FOLD {fold + 1} MODEL LOADING---------------------------")
+        print(f"-------------------------DONE FOLD {fold + 1} MODEL LOADING-----------------------")
 
         
         wandb_logger.init(now, model, config, fold + 1)
@@ -97,7 +97,7 @@ def run_kfold(k, config, data):
 
         trainer.train()
         print(
-            f"-------------------------DONE FOLD {fold + 1} TRAINING------------------------"
+            f"---------------------------DONE FOLD {fold + 1} TRAINING--------------------------"
         )
         wandb.finish()
 
