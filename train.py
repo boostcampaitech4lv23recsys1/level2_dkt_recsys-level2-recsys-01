@@ -28,7 +28,7 @@ def main(config):
     wandb_train_func = functools.partial(
         run_kfold, config["preprocess"]["num_fold"], config, data
     )
-    print("---------------------------START TRAINING---------------------------")
+    print("-----------------------------START TRAINING------------------------------")
     if "sweep" in config:
         # breakpoint()
         sweep_config = json.loads(json.dumps(config["sweep"]))
@@ -44,10 +44,10 @@ def run_kfold(k, config, data):
     now = datetime.now(timezone("Asia/Seoul")).strftime(f"%Y-%m-%d_%H:%M")
     for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):
         print(
-            f"--------------------------START FOLD {fold + 1} TRAINING--------------------------"
+            f"-------------------------START FOLD {fold + 1} TRAINING---------------------------"
         )
         print(
-            f"---------------------------START FOLD {fold + 1} MODEL LOADING---------------------------"
+            f"-------------------------START FOLD {fold + 1} MODEL LOADING----------------------"
         )
         w_config = wandb_logger.init(now, config, fold+1)
 
@@ -104,7 +104,7 @@ def run_kfold(k, config, data):
 
         trainer.train()
         print(
-            f"-------------------------DONE FOLD {fold + 1} TRAINING------------------------"
+            f"---------------------------DONE FOLD {fold + 1} TRAINING--------------------------"
         )
         wandb.finish()
 
