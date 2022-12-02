@@ -25,7 +25,6 @@ class Preprocess:
 
     ## 공통으로 들어가야 하는 preprocessing (Ex elapsed time : threshold, categories : encoding)
     def __preprocessing(self, data, is_train=True):
-
         columns = data.columns.tolist()
         data = data.fillna(0)
         train = pd.read_csv(
