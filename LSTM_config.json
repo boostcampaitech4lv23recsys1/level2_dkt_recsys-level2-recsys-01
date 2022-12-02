@@ -36,7 +36,7 @@
         "args": {
             "hidden_dim" : 128,
             "embedding_dim" : 64,
-            "n_layers" : 3,
+            "n_layers" : 2,
             "dropout_rate" : 0.1
         }
     },
@@ -53,7 +53,7 @@
     },
   
     "trainer" : {
-        "epochs": 5,
+        "epochs": 1,
         "metric": ["aucroc", "accuracy"],
         "seed" : 22,
         "save_dir": "./saved_model",
