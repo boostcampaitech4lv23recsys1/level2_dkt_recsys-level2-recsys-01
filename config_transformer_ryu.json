@@ -64,20 +64,20 @@
   "loss": "bce",
 
   "optimizer": {
-    "type": "adam",
+    "type": "adamW",
     "args": {
       "lr": 0.001,
       "weight_decay": 0,
-      "amsgrad": false
+      "amsgrad": true
     }
   },
 
   "trainer": {
     "type": "사용할 Trainer",
-    "epochs": 1,
+    "epochs": 20,
     "metric": ["aucroc", "accuracy"],
-    "seed": 42,
-    "save_dir": "/opt/ml/model",
-    "submission_dir": "/opt/ml/submission"
+    "seed": 417,
+    "save_dir": "./save_model",
+    "submission_dir": "./submission"
   }
 }
