@@ -2,15 +2,12 @@
 logging을 관리해주는 wandb 함수
 """
 import wandb
-from pytz import timezone
-from datetime import datetime
 
-def init(model, config):
-    # wandb.login(key)
-    now = datetime.now(timezone('Asia/Seoul')).strftime('%Y-%m-%d_%H:%M')
+
+def init(now, model, config, fold):
     wandb.init(project=config['project'], \
         entity=config['entity'], \
-        name=now)
+        name=f'{now}_{config["user"]}_fold_{fold}')
     # wandb에 기록하고 싶은 정보는 json에서 가져다 update로 추가해줄 수 있다.
     wandb.config = {
             "batch_size" : config["data_loader"]["args"]["batch_size"],

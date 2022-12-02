@@ -1,6 +1,7 @@
 {
     "project" : "LSTM",
     "entity" : "dkt-dinosaur",
+    "user": "eunhye",
     
     "cat_cols" : ["KnowledgeTag", "question_number", "test_cat", "test_id", "test_month", "test_day", "test_hour", "week_num"], 
     "num_cols" : ["elapsed_time", "time_question_median",  "question_numslen", 
@@ -13,12 +14,12 @@
           "data_ver" : "v2.1",
           "fe_elapsed_time": [200, "mean"],
           "use_k_fold": true,
-          "num_fold" : 5
+          "num_fold" : 3
     },
   
     "dataset" : {
           "type": "BaseDataset",
-          "max_seq_len": 20
+          "max_seq_len": 100
     },
   
     "data_loader" : {
@@ -36,7 +37,7 @@
             "hidden_dim" : 128,
             "embedding_dim" : 64,
             "num_heads" : 2,
-            "n_layers" : 1,
+            "n_layers" : 3,
             "dropout_rate" : 0.5
         }
     },
@@ -53,7 +54,7 @@
     },
   
     "trainer" : {
-        "epochs": 1,
+        "epochs": 2,
         "metric": ["aucroc", "accuracy"],
         "seed" : 22,
         "save_dir": "./saved_model",

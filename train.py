@@ -1,4 +1,7 @@
 import argparse
+import functools
+from pytz import timezone
+from datetime import datetime
 
 import model as models
 from data_loader.preprocess import Preprocess
@@ -18,7 +21,7 @@ from trainer.trainer import XGBoostTrainer
 from model.XGBoost import XGBoost
 from utils.util import FEATURES
 from config import CFG
-
+from logger import wandb_logger
 
 def main(config):
     
@@ -28,9 +31,27 @@ def main(config):
     
     model = getattr(models, config['arch']['type'])(config).to(config['device'])
     print("---------------------------DONE MODEL LOADING---------------------------")
-    kf = KFold(n_splits=config['preprocess']['num_fold'])
+    wandb_train_func = functools.partial( \
+        run_kfold, \
+        config['preprocess']['num_fold'], \
+        config, \
+        model, \
+        data)
+    print("---------------------------START TRAINING---------------------------")
+    if 'sweep' in config:
+        sweep_id = wandb.sweep(config['sweep'])
+        wandb.agent(sweep_id, wandb_train_func, count=1)
+    else:
+        wandb_train_func()
+    print("---------------------------DONE TRAINING---------------------------")
+
+def run_kfold(k, config, model, data):
+    kf = KFold(n_splits=k)
     for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):
-        print(f"---------------------------{fold+1} FOLD START---------------------------")
+        print(f"---------------------------START FOLD {fold+1}---------------------------")
+        now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
+        wandb_logger.init(now, model, config, fold+1)
+
         train_set = BaseDataset(data, train_idx, config)
         val_set = BaseDataset(data, val_idx, config)
         
@@ -43,13 +64,9 @@ def main(config):
             config=config,
             fold=fold+1
         )
-        print("---------------------------START TRAINING---------------------------")
-        if 'sweep' in config:
-            sweep_id = wandb.sweep(config['sweep'])
-            wandb.agent(sweep_id, trainer.train, count=1)
-        else:
-            trainer.train()
-    print("---------------------------DONE TRAINING---------------------------")
+
+        trainer.train()
+        wandb.finish()
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='DKT Dinosaur')
