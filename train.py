@@ -9,6 +9,7 @@ from data_loader.dataset import BaseDataset, get_loader
 from sklearn.model_selection import KFold
 from trainer import BaseTrainer
 from utils import read_json
+from logger import wandb_logger
 
 import wandb
 import torch
@@ -16,13 +17,6 @@ import torch
 """
 data 불러와서 trainer.py에 넘겨주기
 """
-from data_loader.dataset import XGBoostDataset
-from trainer.trainer import XGBoostTrainer
-from model.XGBoost import XGBoost
-from utils.util import FEATURES
-from config import CFG
-from logger import wandb_logger
-
 def main(config):
     print("---------------------------START PREPROCESSING---------------------------")
     preprocess = Preprocess(config)
@@ -36,6 +30,27 @@ def main(config):
         data)
     
     print("-----------------------------START TRAINING------------------------------")
+    if config["arch"]["type"] == "Transformer":
+        model_config = config["arch"]["args"]
+        model = getattr(models, config['arch']['type'])(
+            dim_model=model_config["dim_model"],
+            dim_ffn=model_config["dim_ffn"],
+            num_heads=model_config["num_heads"],
+            n_layers=model_config["n_layers"],
+            dropout_rate=model_config["dropout_rate"],
+            embedding_dim=model_config["embedding_dim"],
+            device=config["device"],
+            config=config,
+            ).to(config['device'])
+    print("---------------------------DONE MODEL LOADING---------------------------")
+    wandb_train_func = functools.partial(
+        run_kfold,
+        config['preprocess']['num_fold'],
+        config,
+        model,
+        data
+    )
+    print("---------------------------START TRAINING---------------------------")
     if 'sweep' in config:
         sweep_id = wandb.sweep(config['sweep'])
         wandb.agent(sweep_id, wandb_train_func, count=1)
@@ -57,20 +72,21 @@ def run_kfold(k, config, data):
 
         train_set = BaseDataset(data, train_idx, config)
         val_set = BaseDataset(data, val_idx, config)
-        
+
         train, valid = get_loader(train_set, val_set, config['data_loader']['args'])
-        
+
         trainer = BaseTrainer(
             model=model,
             train_data_loader=train,
             valid_data_loader=valid,
             config=config,
-            fold=fold+1
+            fold=fold + 1
         )
 
         trainer.train()
         print(f"---------------------------DONE FOLD {fold+1} TRAINING--------------------------")
         wandb.finish()
+
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='DKT Dinosaur')

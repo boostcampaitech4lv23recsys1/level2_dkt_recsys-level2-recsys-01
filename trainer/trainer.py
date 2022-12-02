@@ -14,6 +14,7 @@ from utils import MetricTracker
 from tqdm import tqdm
 from sklearn.metrics import roc_auc_score, accuracy_score
 import wandb
+from tqdm import tqdm
 
 
 class BaseTrainer(object):
@@ -53,7 +54,7 @@ class BaseTrainer(object):
         self.save_dir = self.cfg_trainer['save_dir']
         self.best_val_auc = 0
 
-    def _train_epoch(self, epoch):
+    def _train_epoch(self):
         """
         Training logic for an epoch
 
@@ -62,6 +63,7 @@ class BaseTrainer(object):
         log = dict()
         total_outputs = []
         total_targets = []
+
         self.model.train()
         print("...Train...")
         for data in tqdm(self.train_data_loader):
@@ -111,10 +113,8 @@ class BaseTrainer(object):
 
         for met in self.metric_ftns:
             ftns = metric.get_metric(met)
-            # breakpoint()
             output_to_cpu = torch.concat(total_outputs).cpu().numpy()
             target_to_cpu = torch.concat(total_targets).cpu().numpy()
-            
             self.valid_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
         val_log = self.valid_metrics.result()
         log.update(**{f'val_{k}' : v for k, v in val_log.items()})
@@ -166,9 +166,9 @@ class BaseTrainer(object):
         """
         loss = self.criterion(output, target)
 
-        # 마지막 시퀀드에 대한 값만 loss 계산
-        loss = loss[:, -1]
-        loss = torch.mean(loss)
+        # # 마지막 시퀀드에 대한 값만 loss 계산
+        # loss = loss[:, -1]
+        # loss = torch.mean(loss)
         return loss
 
 class XGBoostTrainer:
