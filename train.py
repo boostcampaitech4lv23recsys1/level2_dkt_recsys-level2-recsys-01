@@ -31,14 +31,14 @@ def main(config):
     print("---------------------------START MODEL LOADING---------------------------")
     
     model = getattr(models, config['arch']['type'])(config).to(config['device'])
-    print("---------------------------DONE MODEL LOADING---------------------------")
+    print("---------------------------DONE MODEL LOADING----------------------------")
     wandb_train_func = functools.partial( \
         run_kfold, \
         config['preprocess']['num_fold'], \
         config, \
         model, \
         data)
-    print("---------------------------START TRAINING---------------------------")
+    print("-----------------------------START TRAINING------------------------------")
     if 'sweep' in config:
         sweep_id = wandb.sweep(config['sweep'])
         wandb.agent(sweep_id, wandb_train_func, count=1)
@@ -49,7 +49,7 @@ def main(config):
 def run_kfold(k, config, model, data):
     kf = KFold(n_splits=k)
     for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):
-        print(f"------------------------START FOLD {fold+1} TRAINING-----------------------")
+        print(f"--------------------------START FOLD {fold+1} TRAINING--------------------------")
         now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
         wandb_logger.init(now, model, config, fold+1)
 
@@ -67,7 +67,7 @@ def run_kfold(k, config, model, data):
         )
 
         trainer.train()
-        print(f"---------------------------DONE {fold+1} TRAINING---------------------------")
+        print(f"-------------------------DONE FOLD {fold+1} TRAINING------------------------")
         wandb.finish()
 
 if __name__ == '__main__':
