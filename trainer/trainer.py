@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from . import loss, metric, optimizer, scheduler
 from logger import wandb_logger
 from utils import MetricTracker
+from tqdm import tqdm
 from sklearn.metrics import roc_auc_score, accuracy_score
 import wandb
 from tqdm import tqdm
@@ -64,6 +65,7 @@ class BaseTrainer(object):
         total_targets = []
 
         self.model.train()
+        print("...Train...")
         for data in tqdm(self.train_data_loader):
             target = data['answerCode'].to(self.device)
             output = self.model(data)
@@ -73,7 +75,7 @@ class BaseTrainer(object):
             
             output = output[:, -1]
             target = target[:, -1]
-            
+
             total_outputs.append(output.detach())
             total_targets.append(target.detach())
 
@@ -81,22 +83,20 @@ class BaseTrainer(object):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-                
         for met in self.metric_ftns:
             ftns = metric.get_metric(met)
-            output_to_cpu = torch.cat(total_outputs).cpu().numpy()
-            target_to_cpu = torch.cat(total_targets).cpu().numpy()
+            # breakpoint()
+            output_to_cpu = torch.concat(total_outputs).cpu().numpy()
+            target_to_cpu = torch.concat(total_targets).cpu().numpy()
             
             self.train_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
-            
         train_log = self.train_metrics.result()
-        log.update(**{'train_'+k : v for k, v in train_log.items()})
+        log.update(**{f'train_{k}' : v for k, v in train_log.items()})
 
         total_outputs = []
         total_targets = []
         self.model.eval()
-
-        print("----------valid set----------")
+        print("...Valid...")
         for data in tqdm(self.valid_data_loader):
             target = data['answerCode'].to(self.device)
 
@@ -113,13 +113,11 @@ class BaseTrainer(object):
 
         for met in self.metric_ftns:
             ftns = metric.get_metric(met)
-            output_to_cpu = torch.cat(total_outputs).cpu().numpy()
-            target_to_cpu = torch.cat(total_targets).cpu().numpy()
-            
+            output_to_cpu = torch.concat(total_outputs).cpu().numpy()
+            target_to_cpu = torch.concat(total_targets).cpu().numpy()
             self.valid_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
-            
         val_log = self.valid_metrics.result()
-        log.update(**{'val_'+k : v for k, v in val_log.items()})
+        log.update(**{f'val_{k}' : v for k, v in val_log.items()})
 
         return log
 
@@ -127,9 +125,10 @@ class BaseTrainer(object):
         """
         Full training logic
         """
+        # wandb_logger.init(self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):
-            print(f"----------{epoch} epoch start----------")
-            result = self._train_epoch()
+            print(f"-----------------------------EPOCH {epoch} TRAINING----------------------------")
+            result = self._train_epoch(epoch)
             wandb.log(result, step=epoch)
 
             if self.lr_scheduler:
@@ -140,6 +139,7 @@ class BaseTrainer(object):
                 self._save_checkpoint(epoch)
 
     def _save_checkpoint(self, epoch):
+        print("...SAVING MODEL...")
         """
         Saving checkpoints
         :param epoch: current epoch number
