@@ -2,6 +2,7 @@ import argparse
 import functools
 from pytz import timezone
 from datetime import datetime
+import json
 
 import model as models
 from data_loader.preprocess import Preprocess
@@ -29,8 +30,10 @@ def main(config):
     )
     print("---------------------------START TRAINING---------------------------")
     if "sweep" in config:
-        sweep_id = wandb.sweep(config["sweep"])
-        wandb.agent(sweep_id, wandb_train_func, count=1)
+        # breakpoint()
+        sweep_config = json.loads(json.dumps(config["sweep"]))
+        sweep_id = wandb.sweep(sweep_config)
+        wandb.agent(sweep_id, function=wandb_train_func, count=1)
     else:
         wandb_train_func()
     print("---------------------------DONE TRAINING---------------------------")
@@ -46,7 +49,12 @@ def run_kfold(k, config, data):
         print(
             f"---------------------------START FOLD {fold + 1} MODEL LOADING---------------------------"
         )
-        
+        w_config = wandb_logger.init(now, config, fold+1)
+
+        # config update for sweep
+        if "sweep" in config:
+            wandb_logger.sweep_update(config, w_config)
+
         if config["arch"]["type"] == "Transformer":
             model_config = config["arch"]["args"]
             model = getattr(models, config["arch"]["type"])(
@@ -76,12 +84,11 @@ def run_kfold(k, config, data):
         
         if config['arch']['type'] == "LSTM":
             model = getattr(models, config['arch']['type'])(config).to(config['device'])
-            
-        print("---------------------------DONE FOLD {fold + 1} MODEL LOADING---------------------------")
-
+        print(f"---------------------------DONE FOLD {fold + 1} MODEL LOADING---------------------------")
+        wandb.watch(model)
         
-        wandb_logger.init(now, model, config, fold + 1)
         print(f"--------------------------START FOLD {fold+1} TRAINING--------------------------") 
+        
         train_set = BaseDataset(data, train_idx, config)
         val_set = BaseDataset(data, val_idx, config)
 

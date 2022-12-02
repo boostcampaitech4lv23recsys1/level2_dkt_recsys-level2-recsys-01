@@ -1,7 +1,7 @@
 {
     "project" : "LSTM",
     "entity" : "dkt-dinosaur",
-    "user": "실행하는 사람 이름",
+    "user": "eunhye",
     
     "cat_cols" : ["KnowledgeTag", "question_number", "test_cat", "test_id", "test_month", "test_day", "test_hour", "week_num"], 
     "num_cols" : ["elapsed_time", "time_question_median",  "question_numslen", 
@@ -19,13 +19,13 @@
   
     "dataset" : {
           "type": "BaseDataset",
-          "max_seq_len": 200
+          "max_seq_len": 500
     },
   
     "data_loader" : {
         "type": "사용할 DataLoader",
         "args": {
-            "batch_size" : 32,
+            "batch_size" : 64,
             "num_workers" : 8,
             "collate_fn" : "collate_fn"
         }
@@ -36,7 +36,7 @@
         "args": {
             "hidden_dim" : 128,
             "embedding_dim" : 64,
-            "n_layers" : 3,
+            "n_layers" : 2,
             "dropout_rate" : 0.1
         }
     },
@@ -58,5 +58,48 @@
         "seed" : 22,
         "save_dir": "./saved_model",
         "submission_dir": "./submission"
+    },
+    "sweep" : {
+        "name" : "LSTM_sweep_test",
+        "method": "grid",
+        "metric" : {
+            "name": "val_aucroc",
+            "goal": "maximize"
+            },
+        "parameters": {
+            "batch_size": {
+                "values": [64, 128]
+            },
+            "epochs": {
+                "values": [1, 2]
+            },
+            "fe_elapsed_time": {
+                "values": [200]
+            },
+            "max_seq_len": {
+                "values": [500]
+            },
+            "optimizer": {
+                "values": ["adam"]
+            },
+            "learning_rate": {
+                "value": [0.001]
+            },
+            "weight_decay": {
+                "values": [0]
+            },
+            "hidden_dim": {
+                "values": [128]
+            },
+            "embedding_dim": {
+                "values": [64]
+            },
+            "n_layers": {
+                "values": [2]
+            },
+            "dropout_rate": {
+                "value": [0.1, 0.2]
+            }
+        }  
     }
-  }
+}
