@@ -83,8 +83,8 @@ class PositionWiseFeedForward(nn.Module):
         #     nn.Dropout(p=dropout_rate),
         #     nn.Linear(dim_ffn, dim_model, bias=True),
         # )
-        self.w1 = nn.Linear(dim_model, dim_model)
-        self.w2 = nn.Linear(dim_model, dim_model)
+        self.w1 = nn.Linear(dim_model, dim_ffn)
+        self.w2 = nn.Linear(dim_ffn, dim_model)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(dropout_rate)
 
