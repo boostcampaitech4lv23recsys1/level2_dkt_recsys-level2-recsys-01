@@ -9,7 +9,8 @@ class TransformerLSTM(Transformer):
         dim_model,
         dim_ffn,
         num_heads,
-        n_layers,
+        n_layers_transformer,
+        n_layers_LSTM,
         dropout_rate,
         embedding_dim,
         device,
@@ -19,7 +20,7 @@ class TransformerLSTM(Transformer):
             dim_model,
             dim_ffn,
             num_heads,
-            n_layers,
+            n_layers_transformer,
             dropout_rate,
             embedding_dim,
             device,
@@ -28,7 +29,7 @@ class TransformerLSTM(Transformer):
         self.lstm = nn.LSTM(
             input_size=dim_model,
             hidden_size=dim_model,
-            num_layers=n_layers,  # 이거 lstm이랑 transformer랑 달라야하지않나?
+            num_layers=n_layers_LSTM,  # 이거 lstm이랑 transformer랑 달라야하지않나?
             batch_first=True,
             dropout=dropout_rate,
             bidirectional=False,
