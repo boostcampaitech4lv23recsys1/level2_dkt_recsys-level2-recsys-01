@@ -43,10 +43,9 @@ class BaseDataset(Dataset):
     # 인덱스를 입력받아 그에 맵핑되는 입출력 데이터를 파이토치의 Tensor 형태로 리턴
     def __getitem__(self, index: int) -> object:
         user = self.user_list[index]
-        cat = self.X_cat.get_group(user).values
-        num = self.X_num.get_group(user).values.astype(np.float32)
+        cat = self.X_cat.get_group(user).values[:, :-1]
+        num = self.X_num.get_group(user).values[:, :-1].astype(np.float32)
         y = self.Y.get_group(user).values
-
         seq_len = cat.shape[0]
 
         # max seq len을 고려하여서 이보다 길면 자르고 아닐 경우 그대로 놔둔다
@@ -119,7 +118,7 @@ def get_loader(train_set, val_set, config):
         collate_fn=collate_fn,
     )
     return train_loader, valid_loader
-
+    
 
 class XGBoostDataset(object):
     def __init__(
