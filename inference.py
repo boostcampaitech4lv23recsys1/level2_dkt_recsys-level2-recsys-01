@@ -4,6 +4,7 @@
 from data_loader.preprocess import Preprocess
 from data_loader.dataset import BaseDataset, collate_fn
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 import model as models
 from utils import read_json
@@ -35,6 +36,7 @@ def inference_w_one_model(model, data_loader, config, fold):
 def main(config):
     preprocess = Preprocess(config)
     test = preprocess.load_test_data()
+    print("---------------------------DONE PREPROCESSING---------------------------")
     test_set = BaseDataset(test, range(len(test)), config)
     test_loader = DataLoader(
                 test_set,
@@ -61,7 +63,7 @@ def main(config):
 
     k = config['preprocess']['num_fold']
     final_predict = []
-
+    print("---------------------------START FOLD INFERENCE---------------------------")
     for i in range(k):
         predict = inference_w_one_model(model, test_loader, config, i+1)
         final_predict.append(predict)
@@ -75,7 +77,7 @@ def main(config):
     os.makedirs(sub_path, exist_ok=True)
     sub_path = os.path.join(sub_path, f"inference_{config['preprocess']['data_ver']}.csv")
     sub.to_csv(sub_path, index=None)
-
+    print("---------------------------DONE PREDICTION---------------------------")
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='DKT Dinosaur')
