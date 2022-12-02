@@ -1,5 +1,5 @@
 {
-    "project" : "LSTM",
+    "project" : "Transformer",
     "entity" : "dkt-dinosaur",
     "user": "실행하는 사람 이름",
     
@@ -14,7 +14,7 @@
           "data_ver" : "v2.1",
           "fe_elapsed_time": [200, "mean"],
           "use_k_fold": true,
-          "num_fold" : 5
+          "num_fold" : 2
     },
   
     "dataset" : {
@@ -32,10 +32,11 @@
     },
   
     "arch" : {
-        "type": "LSTM",
+        "type": "Transformer",
         "args": {
             "hidden_dim" : 128,
             "embedding_dim" : 64,
+            "num_heads" : 2,
             "n_layers" : 3,
             "dropout_rate" : 0.1
         }
@@ -53,7 +54,7 @@
     },
   
     "trainer" : {
-        "epochs": 5,
+        "epochs": 2,
         "metric": ["aucroc", "accuracy"],
         "seed" : 22,
         "save_dir": "./saved_model",

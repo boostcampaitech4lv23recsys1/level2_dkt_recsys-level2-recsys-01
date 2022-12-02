@@ -48,9 +48,9 @@ def main(config):
 
 def run_kfold(k, config, model, data):
     kf = KFold(n_splits=k)
+    now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
     for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):
-        print(f"--------------------------START FOLD {fold+1} TRAINING--------------------------")
-        now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
+        print(f"--------------------------START FOLD {fold+1} TRAINING--------------------------") 
         wandb_logger.init(now, model, config, fold+1)
 
         train_set = BaseDataset(data, train_idx, config)
@@ -67,7 +67,7 @@ def run_kfold(k, config, model, data):
         )
 
         trainer.train()
-        print(f"-------------------------DONE FOLD {fold+1} TRAINING------------------------")
+        print(f"---------------------------DONE FOLD {fold+1} TRAINING--------------------------")
         wandb.finish()
 
 if __name__ == '__main__':
