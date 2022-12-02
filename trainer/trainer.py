@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from . import loss, metric, optimizer, scheduler
 from logger import wandb_logger
 from utils import MetricTracker
+from tqdm import tqdm
 from sklearn.metrics import roc_auc_score, accuracy_score
 import wandb
 
@@ -62,7 +63,8 @@ class BaseTrainer(object):
         total_outputs = []
         total_targets = []
         self.model.train()
-        for data in self.train_data_loader:
+        print("...Train...")
+        for data in tqdm(self.train_data_loader):
             target = data['answerCode'].to(self.device)
             output = self.model(data)
             loss = self._compute_loss(output, target)
@@ -92,8 +94,8 @@ class BaseTrainer(object):
         total_outputs = []
         total_targets = []
         self.model.eval()
-        
-        for data in self.valid_data_loader:
+        print("...Valid...")
+        for data in tqdm(self.valid_data_loader):
             target = data['answerCode'].to(self.device)
 
             self.optimizer.zero_grad()
@@ -126,7 +128,7 @@ class BaseTrainer(object):
 
         # wandb_logger.init(self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):
-            print(f"---------------------------EPOCH {epoch} TRAINING---------------------------")
+            print(f"-----------------------------EPOCH {epoch} TRAINING----------------------------")
             result = self._train_epoch(epoch)
             wandb.log(result, step=epoch)
 
@@ -138,6 +140,7 @@ class BaseTrainer(object):
                 self._save_checkpoint(epoch)
 
     def _save_checkpoint(self, epoch):
+        print("...SAVING MODEL...")
         """
         Saving checkpoints
         :param epoch: current epoch number

@@ -14,12 +14,12 @@
           "data_ver" : "v2.1",
           "fe_elapsed_time": [200, "mean"],
           "use_k_fold": true,
-          "num_fold" : 3
+          "num_fold" : 2
     },
   
     "dataset" : {
           "type": "BaseDataset",
-          "max_seq_len": 100
+          "max_seq_len": 200
     },
   
     "data_loader" : {
@@ -38,7 +38,7 @@
             "embedding_dim" : 64,
             "num_heads" : 2,
             "n_layers" : 3,
-            "dropout_rate" : 0.5
+            "dropout_rate" : 0.1
         }
     },
   
