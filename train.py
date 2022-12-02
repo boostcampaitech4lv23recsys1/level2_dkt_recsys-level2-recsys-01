@@ -8,7 +8,7 @@ from data_loader.preprocess import Preprocess
 from data_loader.dataset import BaseDataset, get_loader
 from sklearn.model_selection import KFold
 from trainer import BaseTrainer
-from utils import read_json
+from utils import read_json, set_seed
 from logger import wandb_logger
 
 import wandb
@@ -37,7 +37,7 @@ def main(config):
     print("---------------------------DONE TRAINING---------------------------")
 
 def run_kfold(k, config, data):
-    kf = KFold(n_splits=k)
+    kf = KFold(n_splits=k, random_state=config["trainer"]["seed"])
     now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
     for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):
         print(f"--------------------------START FOLD {fold + 1} TRAINING--------------------------")
@@ -78,12 +78,14 @@ def run_kfold(k, config, data):
 
 
 if __name__ == '__main__':
+
     args = argparse.ArgumentParser(description='DKT Dinosaur')
     args.add_argument('-c', '--config', default='./LSTM_Test.json', type=str,
                       help='config 파일 경로 (default: "./config.json")')
     args = args.parse_args()
     config = read_json(args.config)
-    
+
+    set_seed(seed=config["trainer"]["seed"])
     config['device'] = "cuda" if torch.cuda.is_available() else "cpu"
 
     main(config)
