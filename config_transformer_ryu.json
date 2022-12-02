@@ -29,7 +29,7 @@
 
   "preprocess": {
     "data_dir": "./data",
-    "data_ver": "v2.2",
+    "data_ver": "v2.1",
     "fe_elapsed_time": [200, "mean"],
     "use_k_fold": true,
     "num_fold": 5
