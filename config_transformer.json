@@ -29,7 +29,7 @@
 
   "preprocess": {
     "data_dir": "./data",
-    "data_ver": "v2.1",
+    "data_ver": "v2.2",
     "fe_elapsed_time": [200, "mean"],
     "use_k_fold": true,
     "num_fold": 5
@@ -74,7 +74,7 @@
 
   "trainer": {
     "type": "사용할 Trainer",
-    "epochs": 1,
+    "epochs": 10,
     "metric": ["aucroc", "accuracy"],
     "seed": 42,
     "save_dir": "/opt/ml/model",

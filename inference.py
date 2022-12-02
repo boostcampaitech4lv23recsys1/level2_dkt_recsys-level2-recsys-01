@@ -29,7 +29,6 @@ def inference_w_one_model(model, data_loader, config, fold):
             output = model(data)
             output = output.detach().cpu().numpy()
             predict_list.append(output[:, -1][0])
-
     return predict_list
 
 
