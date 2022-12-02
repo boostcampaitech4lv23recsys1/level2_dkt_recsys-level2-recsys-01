@@ -9,6 +9,7 @@ def init(now, model, config, fold):
         entity=config['entity'],
         name=f'{now}_{config["user"]}_fold_{fold}'
     )
+
     # wandb에 기록하고 싶은 정보는 json에서 가져다 update로 추가해줄 수 있다.
     wandb.config = {
         "batch_size": config["data_loader"]["args"]["batch_size"],

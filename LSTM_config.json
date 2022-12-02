@@ -1,11 +1,11 @@
 {
-    "name": "LSTM_test",
-    "project" : "dkt-dinosaur-test",
-    "entity" : "LSTM_test",
+    "project" : "LSTM",
+    "entity" : "dkt-dinosaur",
+    "user": "실행하는 사람 이름",
     
     "cat_cols" : ["KnowledgeTag", "question_number", "test_cat", "test_id", "test_month", "test_day", "test_hour", "week_num"], 
     "num_cols" : ["elapsed_time", "time_question_median",  "question_numslen", 
-                   "tag_acc", "month_acc", "hour_acc", "exp_test", "exp_tag",
+                  "tag_acc", "month_acc", "hour_acc", "exp_test", "exp_tag",
                   "exp_question", "ans_cumsum", "continuous_test"],
   
   
@@ -19,7 +19,7 @@
   
     "dataset" : {
           "type": "BaseDataset",
-          "max_seq_len": 20
+          "max_seq_len": 200
     },
   
     "data_loader" : {
@@ -36,9 +36,8 @@
         "args": {
             "hidden_dim" : 128,
             "embedding_dim" : 64,
-            "num_heads" : 2,
-            "n_layers" : 1,
-            "dropout_rate" : 0.5
+            "n_layers" : 3,
+            "dropout_rate" : 0.1
         }
     },
   
@@ -54,11 +53,10 @@
     },
   
     "trainer" : {
-        "type" : "사용할 Trainer",
-        "epochs": 1,
+        "epochs": 5,
         "metric": ["aucroc", "accuracy"],
         "seed" : 22,
-        "save_dir": "/opt/ml/model",
-        "submission_dir": "/opt/ml/submission" 
+        "save_dir": "./saved_model",
+        "submission_dir": "./submission"
     }
   }

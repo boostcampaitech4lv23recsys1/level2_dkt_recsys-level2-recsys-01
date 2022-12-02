@@ -1,6 +1,5 @@
 import argparse
 import functools
-
 from pytz import timezone
 from datetime import datetime
 
@@ -19,13 +18,12 @@ import torch
 data 불러와서 trainer.py에 넘겨주기
 """
 
-
 def main(config):
     print("---------------------------START PREPROCESSING---------------------------")
     preprocess = Preprocess(config)
     data = preprocess.load_train_data()
-    print("---------------------------DONE PREPROCESSING---------------------------")
 
+    print("---------------------------DONE PREPROCESSING----------------------------")
     wandb_train_func = functools.partial(
         run_kfold, config["preprocess"]["num_fold"], config, data
     )
@@ -37,19 +35,18 @@ def main(config):
         wandb_train_func()
     print("---------------------------DONE TRAINING---------------------------")
 
-
 def run_kfold(k, config, data):
     kf = KFold(n_splits=k)
+
     now = datetime.now(timezone("Asia/Seoul")).strftime(f"%Y-%m-%d_%H:%M")
-    for fold, (train_idx, val_idx) in enumerate(
-        kf.split(data["userID"].unique().tolist())
-    ):
+    for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):
         print(
             f"--------------------------START FOLD {fold + 1} TRAINING--------------------------"
         )
         print(
-            "---------------------------START MODEL LOADING---------------------------"
+            f"---------------------------START FOLD {fold + 1} MODEL LOADING---------------------------"
         )
+        
         if config["arch"]["type"] == "Transformer":
             model_config = config["arch"]["args"]
             model = getattr(models, config["arch"]["type"])(
@@ -62,6 +59,7 @@ def run_kfold(k, config, data):
                 device=config["device"],
                 config=config,
             ).to(config["device"])
+            
         if config["arch"]["type"] == "TransformerLSTM":
             model_config = config["arch"]["args"]
             model = getattr(models, config["arch"]["type"])(
@@ -75,11 +73,15 @@ def run_kfold(k, config, data):
                 device=config["device"],
                 config=config,
             ).to(config["device"])
-        print(
-            "---------------------------DONE MODEL LOADING---------------------------"
-        )
-        wandb_logger.init(now, model, config, fold + 1)
+        
+        if config['arch']['type'] == "LSTM":
+            model = getattr(models, config['arch']['type'])(config).to(config['device'])
+            
+        print("---------------------------DONE FOLD {fold + 1} MODEL LOADING---------------------------")
 
+        
+        wandb_logger.init(now, model, config, fold + 1)
+        print(f"--------------------------START FOLD {fold+1} TRAINING--------------------------") 
         train_set = BaseDataset(data, train_idx, config)
         val_set = BaseDataset(data, val_idx, config)
 
