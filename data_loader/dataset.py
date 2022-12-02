@@ -145,8 +145,6 @@ class XGBoostDataset(object):
         self,
         ratio=0.9,
     ):
-        random.seed(42)
-
         train_df = self.train[~self.train["answerCode"] == -1]
 
         random.shuffle(self.user_ids)

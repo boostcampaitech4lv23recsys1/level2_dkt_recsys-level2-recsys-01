@@ -46,7 +46,7 @@ def run_kfold(k, config, data):
         print(
             f"---------------------------START FOLD {fold + 1} MODEL LOADING---------------------------"
         )
-        
+
         if config["arch"]["type"] == "Transformer":
             model_config = config["arch"]["args"]
             model = getattr(models, config["arch"]["type"])(
@@ -79,7 +79,6 @@ def run_kfold(k, config, data):
             
         print("---------------------------DONE FOLD {fold + 1} MODEL LOADING---------------------------")
 
-        
         wandb_logger.init(now, model, config, fold + 1)
         print(f"--------------------------START FOLD {fold+1} TRAINING--------------------------") 
         train_set = BaseDataset(data, train_idx, config)

@@ -54,7 +54,7 @@ class BaseTrainer(object):
         self.save_dir = self.cfg_trainer['save_dir']
         self.best_val_auc = 0
 
-    def _train_epoch(self):
+    def _train_epoch(self, epoch):
         """
         Training logic for an epoch
 
