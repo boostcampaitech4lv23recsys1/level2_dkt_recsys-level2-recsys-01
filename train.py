@@ -28,16 +28,13 @@ def main(config):
     preprocess = Preprocess(config)
     data = preprocess.load_train_data()
     print("---------------------------DONE PREPROCESSING----------------------------")
-    print("---------------------------START MODEL LOADING---------------------------")
-    
-    model = getattr(models, config['arch']['type'])(config).to(config['device'])
-    print("---------------------------DONE MODEL LOADING----------------------------")
+
     wandb_train_func = functools.partial( \
         run_kfold, \
         config['preprocess']['num_fold'], \
         config, \
-        model, \
         data)
+    
     print("-----------------------------START TRAINING------------------------------")
     if 'sweep' in config:
         sweep_id = wandb.sweep(config['sweep'])
@@ -46,11 +43,16 @@ def main(config):
         wandb_train_func()
     print("---------------------------DONE TRAINING---------------------------")
 
-def run_kfold(k, config, model, data):
+def run_kfold(k, config, data):
     kf = KFold(n_splits=k)
     now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
     for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):
         print(f"--------------------------START FOLD {fold+1} TRAINING--------------------------") 
+
+        print("---------------------------START MODEL LOADING---------------------------")
+        model = getattr(models, config['arch']['type'])(config).to(config['device'])
+        print("---------------------------DONE MODEL LOADING----------------------------")
+        
         wandb_logger.init(now, model, config, fold+1)
 
         train_set = BaseDataset(data, train_idx, config)
