@@ -86,7 +86,7 @@ data/
 *.tar.gz
 
 # save model folder
-saved/
+saved_model/
 
 # submission folder
 submission/
