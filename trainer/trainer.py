@@ -5,15 +5,19 @@ train.py에서 이 파일을 호출
 import os
 import torch
 from numpy import inf
+import numpy as np
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from ..logger import wandb_logger
 from . import loss, metric, optimizer, scheduler
-from ..utils import MetricTracker
+from logger import wandb_logger
+from utils import MetricTracker
+from tqdm import tqdm
+from sklearn.metrics import roc_auc_score, accuracy_score
 import wandb
+from tqdm import tqdm
 
 
-class BaseTrainer:
+class BaseTrainer(object):
     """
     model과 data_loader, 그리고 각종 config를 넣어서 학습시키는 class
     """
@@ -23,13 +27,15 @@ class BaseTrainer:
         model: nn.Module,
         train_data_loader: DataLoader,
         valid_data_loader: DataLoader,
-        config,
+        config: dict,
+        fold: int
     ):
         self.model = model
         self.train_data_loader = train_data_loader
         self.valid_data_loader = valid_data_loader
         self.config = config
         self.cfg_trainer = config['trainer']
+        self.fold = fold
 
         self.device = config['device']
 
@@ -48,47 +54,70 @@ class BaseTrainer:
         self.save_dir = self.cfg_trainer['save_dir']
         self.best_val_auc = 0
 
-    def _train_epoch(self, epoch):
+    def _train_epoch(self):
         """
         Training logic for an epoch
 
         :param epoch: Current epoch number
         """
         log = dict()
-        self.model.train()
-        for batch_idx, (data, target) in enumerate(self.train_data_loader):
-            data, target = data.to(self.device), target.to(self.device)
+        total_outputs = []
+        total_targets = []
 
-            
+        self.model.train()
+        print("...Train...")
+        for data in tqdm(self.train_data_loader):
+            target = data['answerCode'].to(self.device)
             output = self.model(data)
-            loss = self.criterion(output, target)
+            loss = self._compute_loss(output, target)
+            # target = target.detach().cpu()
             self.train_metrics.update('loss', loss.item())
-            for met in self.metric_ftns:
-                ftns = metric.get_metric(met)
-                self.train_metrics.update(met, ftns(output, target))
+            
+            output = output[:, -1]
+            target = target[:, -1]
+
+            total_outputs.append(output.detach())
+            total_targets.append(target.detach())
 
             # Backpropagation
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-        
+        for met in self.metric_ftns:
+            ftns = metric.get_metric(met)
+            # breakpoint()
+            output_to_cpu = torch.concat(total_outputs).cpu().numpy()
+            target_to_cpu = torch.concat(total_targets).cpu().numpy()
+            
+            self.train_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
         train_log = self.train_metrics.result()
-        log.update(**{'train_'+k : v for k, v in train_log.items()})
+        log.update(**{f'train_{k}' : v for k, v in train_log.items()})
 
+        total_outputs = []
+        total_targets = []
         self.model.eval()
-        for batch_idx, (data, target) in enumerate(self.valid_data_loader):
-            data, target = data.to(self.device), target.to(self.device)
+        print("...Valid...")
+        for data in tqdm(self.valid_data_loader):
+            target = data['answerCode'].to(self.device)
 
             self.optimizer.zero_grad()
             output = self.model(data)
-            loss = self.criterion(output, target)
+            loss = self._compute_loss(output, target)
             self.valid_metrics.update('loss', loss.item())
-            for met in self.metric_ftns:
-                ftns = metric.get_metric(met)
-                self.valid_metrics.update(met, ftns(output, target))
 
+            output = output[:, -1]
+            target = target[:, -1]
+
+            total_outputs.append(output.detach())
+            total_targets.append(target.detach())
+
+        for met in self.metric_ftns:
+            ftns = metric.get_metric(met)
+            output_to_cpu = torch.concat(total_outputs).cpu().numpy()
+            target_to_cpu = torch.concat(total_targets).cpu().numpy()
+            self.valid_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
         val_log = self.valid_metrics.result()
-        log.update(**{'val_'+k : v for k, v in val_log.items()})
+        log.update(**{f'val_{k}' : v for k, v in val_log.items()})
 
         return log
 
@@ -96,11 +125,9 @@ class BaseTrainer:
         """
         Full training logic
         """
-        # 고유 키 값 넣어주세요
-        key = None
-        
-        wandb_logger.init(key, self.model, self.config)
+        # wandb_logger.init(self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):
+            print(f"-----------------------------EPOCH {epoch} TRAINING----------------------------")
             result = self._train_epoch(epoch)
             wandb.log(result, step=epoch)
 
@@ -112,6 +139,7 @@ class BaseTrainer:
                 self._save_checkpoint(epoch)
 
     def _save_checkpoint(self, epoch):
+        print("...SAVING MODEL...")
         """
         Saving checkpoints
         :param epoch: current epoch number
@@ -124,5 +152,61 @@ class BaseTrainer:
         }
         save_path = os.path.join(self.save_dir, model_name)
         os.makedirs(save_path, exist_ok=True)
-        save_path = os.path.join(save_path, 'best_model.pt')
+        save_path = os.path.join(save_path, f'fold_{self.fold}_best_model.pt')
         torch.save(state, save_path)
+    
+    # loss계산하고 parameter update!
+    def _compute_loss(self, output, target):
+        """
+        Args :
+            preds   : (batch_size, max_seq_len)
+            targets : (batch_size, max_seq_len)
+
+        """
+        loss = self.criterion(output, target)
+
+        # # 마지막 시퀀드에 대한 값만 loss 계산
+        # loss = loss[:, -1]
+        # loss = torch.mean(loss)
+        return loss
+
+class XGBoostTrainer:
+    def __init__(
+            self,
+            model,
+            train_X,
+            train_y,
+            test_X,
+            test_y,
+            features,
+            early_stopping_rounds=100,
+            verbose=5,
+    ):
+
+        self.model = model
+
+        self.train_X = train_X
+        self.train_y = train_y
+        self.test_X = test_X
+        self.test_y = test_y
+
+        self.features = features
+        self.early_stopping_rounds = early_stopping_rounds
+        self.verbose = verbose
+
+
+    def train(self):
+        self.model.fit(
+            X=self.train_X[self.features],
+            y=self.train_y,
+            eval_set=[(self.test_X[self.features], self.test_y)],
+            early_stopping_rounds=self.early_stopping_rounds,
+            verbose=self.verbose
+        )
+
+        preds = self.model.predict_proba(self.test_X[self.features])[:, 1]
+        acc = accuracy_score(self.test_y, np.where(preds >= 0.5, 1, 0))
+        auc = roc_auc_score(self.test_y, preds)
+
+        print(f"VALID AUC : {auc} ACC : {acc}\n")
+
