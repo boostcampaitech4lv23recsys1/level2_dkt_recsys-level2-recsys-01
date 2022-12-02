@@ -71,7 +71,7 @@ class Transformer(nn.Module):
         cat_emb = torch.cat(cat_emb_list, dim=-1)
         cat_emb = self.cat_comb_proj(cat_emb)
 
-        num_emb = self.num_comb_proj(num_feature[:, :, :-1])  # 마스크를 빼고 넣는다.
+        num_emb = self.num_comb_proj(num_feature)
         X = torch.cat([cat_emb, num_emb], -1)
 
         mask_pad = (

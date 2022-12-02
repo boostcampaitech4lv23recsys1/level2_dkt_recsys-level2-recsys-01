@@ -41,7 +41,7 @@ def run_kfold(k, config, data):
     now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
     for fold, (train_idx, val_idx) in enumerate(kf.split(data['userID'].unique().tolist())):
         print(f"--------------------------START FOLD {fold + 1} TRAINING--------------------------")
-        print("---------------------------START FOLD {fold + 1} MODEL LOADING---------------------------")
+        print(f"---------------------------START FOLD {fold + 1} MODEL LOADING---------------------------")
         if config["arch"]["type"] == "Transformer":
             model_config = config["arch"]["args"]
             model = getattr(models, config['arch']['type'])(
