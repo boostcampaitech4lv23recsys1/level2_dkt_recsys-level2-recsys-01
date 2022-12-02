@@ -15,6 +15,9 @@ import pandas as pd
 import numpy as np
 import argparse
 
+from datetime import datetime
+from pytz import timezone
+
 
 def inference_w_one_model(model, data_loader, config, fold):
     model_path = os.path.join(config["trainer"]["save_dir"], config["arch"]["type"])
@@ -89,11 +92,14 @@ def main(config):
 
     sub_path = config["trainer"]["submission_dir"]
     os.makedirs(sub_path, exist_ok=True)
+    cur_time = str(datetime.now(timezone("Asia/Seoul")))[:19]
     sub_path = os.path.join(
-        sub_path, f"inference_{config['preprocess']['data_ver']}.csv"
+        sub_path,
+        f"inference_{cur_time}_{config['preprocess']['data_ver']}.csv",
     )
     sub.to_csv(sub_path, index=None)
     print("---------------------------DONE PREDICTION---------------------------")
+
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser(description="DKT Dinosaur")
