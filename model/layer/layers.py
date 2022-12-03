@@ -39,8 +39,6 @@ class MultiHeadAttention(nn.Module):
         self.w_v = nn.Linear(dim_model, dim_model, bias=True)
         self.w_o = nn.Linear(dim_model, dim_model)
 
-        self.dropout = nn.Dropout(dropout_rate)
-
     def forward(self, q, k, v, attn_mask=None):
         batch_size = v.size(0)
 
@@ -77,24 +75,15 @@ class PositionWiseFeedForward(nn.Module):
     def __init__(self, dim_model, dim_ffn, dropout_rate):
         super(PositionWiseFeedForward, self).__init__()
 
-        # self.sequential = nn.Sequential(
-        #     nn.Linear(dim_model, dim_ffn, bias=True),
-        #     nn.ReLU(),
-        #     nn.Dropout(p=dropout_rate),
-        #     nn.Linear(dim_ffn, dim_model, bias=True),
-        # )
-        self.w1 = nn.Linear(dim_model, dim_ffn)
-        self.w2 = nn.Linear(dim_ffn, dim_model)
-        self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(dropout_rate)
+        self.sequential = nn.Sequential(
+            nn.Linear(dim_model, dim_ffn, bias=True),
+            nn.Dropout(p=dropout_rate),
+            nn.ReLU(),
+            nn.Linear(dim_ffn, dim_model, bias=True),
+        )
 
     def forward(self, x):
-        x = self.w1(x)
-        x = self.relu(x)
-        x = self.dropout(x)
-        x = self.w2(x)
-
-        return x
+        return self.sequential(x)
 
 
 class EncoderLayer(nn.Module):
@@ -115,13 +104,11 @@ class EncoderLayer(nn.Module):
 
     def forward(self, x, attn_mask):
         output, attn = self.attention(q=x, k=x, v=x, attn_mask=attn_mask)
-        output = self.norm_attn(output + x)
-        output = self.dropout_attn(output)
+        output = self.norm_attn(self.dropout_attn(output) + x)
 
         # ffn을 단어마다 하는 경우가 있는것을 발견 학습안될때 참고
         res_x = output
         output = self.ffn(output)
-        output = self.norm_ffn(output + res_x)
-        output = self.dropout_ffn(output)
+        output = self.norm_ffn(self.dropout_ffn(output) + res_x)
 
         return output
