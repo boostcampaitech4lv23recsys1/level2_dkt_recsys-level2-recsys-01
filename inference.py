@@ -5,6 +5,8 @@ from data_loader.preprocess import Preprocess
 from data_loader.dataset import BaseDataset, collate_fn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from pytz import timezone
+from datetime import datetime
 
 import model as models
 from utils import read_json
@@ -26,7 +28,7 @@ def inference_w_one_model(model, data_loader, config, fold):
     predict_list = []
 
     with torch.no_grad():
-        for data in data_loader:
+        for data in tqdm(data_loader):
             output = model(data)
             output = output.detach().cpu().numpy()
             predict_list.append(output[:, -1][0])
@@ -34,6 +36,7 @@ def inference_w_one_model(model, data_loader, config, fold):
 
 
 def main(config):
+    now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
     preprocess = Preprocess(config)
     test = preprocess.load_test_data()
     print("---------------------------DONE PREPROCESSING---------------------------")
@@ -90,8 +93,9 @@ def main(config):
 
     sub_path = config["trainer"]["submission_dir"]
     os.makedirs(sub_path, exist_ok=True)
+    now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
     sub_path = os.path.join(
-        sub_path, f"inference_{config['preprocess']['data_ver']}.csv"
+        sub_path, f"{now}inference_{config['preprocess']['data_ver']}.csv"
     )
     sub.to_csv(sub_path, index=None)
     print("---------------------------DONE PREDICTION---------------------------")
