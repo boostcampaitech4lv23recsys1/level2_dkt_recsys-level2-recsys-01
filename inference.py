@@ -61,14 +61,15 @@ def main(config):
             config=config,
         ).to(config["device"])
     if config["arch"]["type"] == "TransformerLSTM":
-        model_args = config["arch"]["args"]
+        model_config = config["arch"]["args"]
         model = getattr(models, config["arch"]["type"])(
-            dim_model=model_args["dim_model"],
-            dim_ffn=model_args["dim_ffn"],
-            num_heads=model_args["num_heads"],
-            n_layers=model_args["n_layers"],
-            dropout_rate=model_args["dropout_rate"],
-            embedding_dim=model_args["embedding_dim"],
+            dim_model=model_config["dim_model"],
+            dim_ffn=model_config["dim_ffn"],
+            num_heads=model_config["num_heads"],
+            n_layers_transformer=model_config["n_layers_transformer"],
+            n_layers_LSTM=model_config["n_layers_LSTM"],
+            dropout_rate=model_config["dropout_rate"],
+            embedding_dim=model_config["embedding_dim"],
             device=config["device"],
             config=config,
         ).to(config["device"])
