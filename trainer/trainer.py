@@ -134,7 +134,7 @@ class BaseTrainer(object):
             if self.lr_scheduler:
                 self.lr_scheduler.step()
 
-            if result['val_aucroc'] > self.best_val_auc:
+            if result['val_aucroc'] > self.best_val_auc and epoch > self.epochs // 2:
                 self.best_val_auc = result['val_aucroc']
                 self._save_checkpoint(epoch)
 
