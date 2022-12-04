@@ -5,3 +5,5 @@ from .LSTM import LSTM
 from .transformer import Transformer
 
 from .transformerLSTM import TransformerLSTM
+
+from .getmodel import get_model
