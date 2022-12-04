@@ -52,7 +52,7 @@ class BaseTrainer(object):
         self.start_epoch = 1
 
         self.save_dir = self.cfg_trainer["save_dir"]
-        self.best_val_auc = 0
+        self.min_val_loss = inf
         self.model_name = type(self.model).__name__
 
     def _train_epoch(self):
@@ -137,13 +137,13 @@ class BaseTrainer(object):
             if self.lr_scheduler:
                 self.lr_scheduler.step()
 
-            if result["val_aucroc"] > self.best_val_auc:
+            if result["val_loss"] < self.min_val_loss:
                 self.state = {
                     "model_name": self.model_name,
                     "epoch": epoch,
                     "state_dict": self.model.state_dict(),
                 }
-                self.best_val_auc = result["val_aucroc"]
+                self.min_val_loss = result["val_loss"]
 
         self._save_checkpoint()
 
