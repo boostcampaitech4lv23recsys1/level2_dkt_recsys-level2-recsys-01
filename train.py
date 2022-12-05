@@ -54,39 +54,7 @@ def run_kfold(k, config, data):
         print(
             f"-------------------------START FOLD {fold + 1} MODEL LOADING----------------------"
         )
-
-        if config["arch"]["type"] == "Transformer":
-            model_config = config["arch"]["args"]
-            model = getattr(models, config["arch"]["type"])(
-                dim_model=model_config["dim_model"],
-                dim_ffn=model_config["dim_ffn"],
-                num_heads=model_config["num_heads"],
-                n_layers=model_config["n_layers"],
-                dropout_rate=model_config["dropout_rate"],
-                embedding_dim=model_config["embedding_dim"],
-                device=config["device"],
-                config=config,
-            ).to(config["device"])
-            
-        if config["arch"]["type"] == "TransformerLSTM":
-            model_config = config["arch"]["args"]
-            model = getattr(models, config["arch"]["type"])(
-                dim_model=model_config["dim_model"],
-                dim_ffn=model_config["dim_ffn"],
-                num_heads=model_config["num_heads"],
-                n_layers_transformer=model_config["n_layers_transformer"],
-                n_layers_LSTM=model_config["n_layers_LSTM"],
-                dropout_rate=model_config["dropout_rate"],
-                embedding_dim=model_config["embedding_dim"],
-                device=config["device"],
-                config=config,
-            ).to(config["device"])
-        
-        if config['arch']['type'] == "LSTM":
-            model = getattr(models, config['arch']['type'])(config).to(config['device'])
-            
-        print("---------------------------DONE FOLD {fold + 1} MODEL LOADING---------------------------")
-
+        model = models.get_models(config)
         wandb_logger.init(now, model, config, fold + 1)
         print(
             f"--------------------------START FOLD {fold+1} TRAINING--------------------------"
@@ -111,15 +79,19 @@ def run_kfold(k, config, data):
         wandb.finish()
 
 
-if __name__ == '__main__':
-
-    set_seed(config["trainer"]["seed"])
-    
-    args = argparse.ArgumentParser(description='DKT Dinosaur')
-    args.add_argument('-c', '--config', default='./LSTM_Test.json', type=str,
-                      help='config 파일 경로 (default: "./config.json")')
+if __name__ == "__main__":
+    args = argparse.ArgumentParser(description="DKT Dinosaur")
+    args.add_argument(
+        "-c",
+        "--config",
+        default="./LSTM_Test.json",
+        type=str,
+        help='config 파일 경로 (default: "./config.json")',
+    )
     args = args.parse_args()
     config = read_json(args.config)
+
     config["device"] = "cuda" if torch.cuda.is_available() else "cpu"
+    set_seed(config["trainer"]["seed"])
 
     main(config)
