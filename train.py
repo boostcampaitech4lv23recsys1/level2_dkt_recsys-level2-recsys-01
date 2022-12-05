@@ -24,6 +24,10 @@ def main(config):
     preprocess = Preprocess(config)
     data = preprocess.load_train_data()
 
+    print("-------------------------using cat coloumn list-------------------------")
+    print(config["cat_cols"])
+    print("-------------------------using num coloumn list-------------------------")
+    print(config["num_cols"])
     print("---------------------------DONE PREPROCESSING----------------------------")
     wandb_train_func = functools.partial(
         run_kfold, config["preprocess"]["num_fold"], config, data
@@ -39,7 +43,6 @@ def main(config):
 
 def run_kfold(k, config, data):
     kf = KFold(n_splits=k, shuffle=True, random_state=config["trainer"]["seed"])
-    now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
 
     now = datetime.now(timezone("Asia/Seoul")).strftime(f"%Y-%m-%d_%H:%M")
     for fold, (train_idx, val_idx) in enumerate(
@@ -109,14 +112,14 @@ def run_kfold(k, config, data):
 
 
 if __name__ == '__main__':
+
+    set_seed(config["trainer"]["seed"])
     
     args = argparse.ArgumentParser(description='DKT Dinosaur')
     args.add_argument('-c', '--config', default='./LSTM_Test.json', type=str,
                       help='config 파일 경로 (default: "./config.json")')
     args = args.parse_args()
     config = read_json(args.config)
-
-    set_seed(seed=config["trainer"]["seed"])
-    config['device'] = "cuda" if torch.cuda.is_available() else "cpu"
+    config["device"] = "cuda" if torch.cuda.is_available() else "cpu"
 
     main(config)

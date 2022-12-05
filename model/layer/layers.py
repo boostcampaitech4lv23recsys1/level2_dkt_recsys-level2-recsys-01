@@ -34,9 +34,9 @@ class MultiHeadAttention(nn.Module):
             dim_model=dim_model, dropout_rate=dropout_rate
         )
 
-        self.w_q = nn.Linear(dim_model, dim_model, bias=True)
-        self.w_k = nn.Linear(dim_model, dim_model, bias=True)
-        self.w_v = nn.Linear(dim_model, dim_model, bias=True)
+        self.w_q = nn.Linear(dim_model, dim_model)
+        self.w_k = nn.Linear(dim_model, dim_model)
+        self.w_v = nn.Linear(dim_model, dim_model)
         self.w_o = nn.Linear(dim_model, dim_model)
 
     def forward(self, q, k, v, attn_mask=None):
