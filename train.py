@@ -51,11 +51,6 @@ def run_kfold(k, config, data):
             f"-------------------------START FOLD {fold + 1} MODEL LOADING----------------------"
         )
         model = models.get_models(config)
-
-        print(
-            f"-------------------------DONE FOLD {fold + 1} MODEL LOADING-----------------------"
-        )
-
         wandb_logger.init(now, model, config, fold + 1)
         print(
             f"--------------------------START FOLD {fold+1} TRAINING--------------------------"
