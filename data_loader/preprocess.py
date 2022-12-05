@@ -77,12 +77,12 @@ class Preprocess:
         if is_train:
             data = data[data["answerCode"] != -1].reset_index(drop=True)
         else:
-            if self.augmentation:
-                data = data[~data["userID_origin"].isin(trainusers)].reset_index(
-                    drop=True
-                )
-            else:
-                data = data[~data["userID"].isin(trainusers)].reset_index(drop=True)
+            # if self.augmentation:
+            #     data = data[~data["userID_origin"].isin(trainusers)].reset_index(
+            #         drop=True
+            #     )
+            # else:
+            data = data[~data["userID"].isin(trainusers)].reset_index(drop=True)
 
         # 주기적인 성질(날짜, 요일, 월 등)을 갖는 column을 sin, cos을 이용해서 변환하기
         def process_periodic(data: pd.Series, period: int, process_type: str = "sin"):
