@@ -40,18 +40,20 @@ class Preprocess:
             data.loc[
                 data[data["elapsed_time"] > threshold].index, "elapsed_time"
             ] = threshold
-            if imputation == "median":
-                test2time = data.groupby("testId")["elapsed_time"].median().to_dict()
-            elif imputation == "mean":
-                test2time = data.groupby("testId")["elapsed_time"].mean().to_dict()
-            data.loc[data[data["elapsed_time"] == -1].index, "elapsed_time"] = data[
-                data["elapsed_time"] == -1
-            ]["testId"]
-            data.loc[
-                data[data["elapsed_time"].apply(type) == str].index, "elapsed_time"
-            ] = data[data["elapsed_time"].apply(type) == str]["elapsed_time"].map(
-                test2time
-            )
+            if imputation != "cut":
+                if imputation == "median":
+                    test2time = data.groupby("testId")["elapsed_time"].median().to_dict()
+                elif imputation == "mean":
+                    test2time = data.groupby("testId")["elapsed_time"].mean().to_dict()
+                    
+                data.loc[data[data["elapsed_time"] == threshold].index, "elapsed_time"] = data[
+                    data["elapsed_time"] == threshold
+                ]["testId"]
+                data.loc[
+                    data[data["elapsed_time"].apply(type) == str].index, "elapsed_time"
+                ] = data[data["elapsed_time"].apply(type) == str]["elapsed_time"].map(
+                    test2time
+                )
 
         def val2idx(val_list):
             val2idx = {}
@@ -83,6 +85,8 @@ class Preprocess:
             #     )
             # else:
             data = data[~data["userID"].isin(trainusers)].reset_index(drop=True)
+        
+        
 
         # 주기적인 성질(날짜, 요일, 월 등)을 갖는 column을 sin, cos을 이용해서 변환하기
         def process_periodic(data: pd.Series, period: int, process_type: str = "sin"):
@@ -93,7 +97,12 @@ class Preprocess:
 
         # 사용방법 예시
         # data["주기적 성질을 갖는 컬럼"] = process_periodic(data=data["주기적 성질을 갖는 컬럼"], period=주기)
+        if "test_hour" in columns:
+            data["test_hour"] = process_periodic(data=data["test_hour"], period=24)
 
+        if "test_month" in columns:
+            data["test_month"] = process_periodic(data=data["test_month"], period=12)
+            
         return data
 
     def load_data_from_file(self):
@@ -122,6 +131,7 @@ class Preprocess:
         k = self.cfg_preprocess["num_fold"]
         gkf = GroupKFold(n_splits=k)
         group = data["userID"].tolist()
+
         return gkf, group
 
     def __data_augmentation(self, data: pd.DataFrame):
@@ -148,4 +158,5 @@ class Preprocess:
         data["userID_origin"] = data["userID"].copy()
         encoder = LabelEncoder()
         data["userID"] = encoder.fit_transform(whole_new_user_id)
+        
         return data
