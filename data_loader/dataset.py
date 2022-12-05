@@ -27,14 +27,7 @@ class BaseDataset(Dataset):
         self.X_num = self.X_num.groupby("userID")
 
         # self.data = data[.loc[idx, :].reset_index(drop=True)]
-        self.data = data[data['userID'].isin(idx)]
-        self.user_list = self.data['userID'].unique().tolist()
         self.group_data = self.data.groupby("userID")
-        self.config = config
-        self.max_seq_len = config['dataset']['max_seq_len']
-
-        self.cur_cat_col = [f'{col}2idx' for col in config['cat_cols']] + ['userID']
-        self.cur_num_col = config['num_cols'] + ['userID']
 
     # 총 데이터의 개수를 리턴
     def __len__(self) -> int:
@@ -114,11 +107,11 @@ def get_loader(train_set, val_set, config):
         val_set,
         num_workers=config["num_workers"],
         shuffle=False,
-        batch_size=config['batch_size'],
+        batch_size=config["batch_size"],
         collate_fn=collate_fn,
     )
     return train_loader, valid_loader
-    
+
 
 class XGBoostDataset(object):
     def __init__(
