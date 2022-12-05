@@ -6,26 +6,14 @@
     "cat_cols": [
       "KnowledgeTag",
       "question_number",
-      "test_cat",
-      "test_id",
-      "test_month",
-      "test_hour",
-      "week_num"
+      "assessmentItemID"
     ],
-    "num_cols": ["elapsed_time",
+    "num_cols": ["elapsed_time_mean",
     "time_question_median",
     "tag_acc",
-    "test_cat_aC_mean",
-    "question_number_aC_mean",
-    "KnowledgeTag_aC_mean",
-    "week_num_aC_mean",
-    "test_cat_et_mean",
-    "question_number_et_mean",
-    "KnowledgeTag_et_mean",
-    "test_cat_et_std",
-    "question_number_et_std",
-    "KnowledgeTag_et_std"
-    ],
+    "test_acc",
+    "KnowledgeTag_et_mean"
+  ],
   
     "preprocess": {
       "data_dir": "./data",
@@ -74,7 +62,7 @@
   
     "trainer": {
       "type": "사용할 Trainer",
-      "epochs": 10,
+      "epochs": 20,
       "metric": ["aucroc", "accuracy"],
       "seed": 42,
       "save_dir": "/opt/ml/model",
