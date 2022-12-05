@@ -38,18 +38,20 @@ class Preprocess:
             data.loc[
                 data[data["elapsed_time"] > threshold].index, "elapsed_time"
             ] = threshold
-            if imputation == "median":
-                test2time = data.groupby("testId")["elapsed_time"].median().to_dict()
-            elif imputation == "mean":
-                test2time = data.groupby("testId")["elapsed_time"].mean().to_dict()
-            data.loc[data[data["elapsed_time"] == -1].index, "elapsed_time"] = data[
-                data["elapsed_time"] == -1
-            ]["testId"]
-            data.loc[
-                data[data["elapsed_time"].apply(type) == str].index, "elapsed_time"
-            ] = data[data["elapsed_time"].apply(type) == str]["elapsed_time"].map(
-                test2time
-            )
+            if imputation != "cut":
+                if imputation == "median":
+                    test2time = data.groupby("testId")["elapsed_time"].median().to_dict()
+                elif imputation == "mean":
+                    test2time = data.groupby("testId")["elapsed_time"].mean().to_dict()
+                    
+                data.loc[data[data["elapsed_time"] == threshold].index, "elapsed_time"] = data[
+                    data["elapsed_time"] == threshold
+                ]["testId"]
+                data.loc[
+                    data[data["elapsed_time"].apply(type) == str].index, "elapsed_time"
+                ] = data[data["elapsed_time"].apply(type) == str]["elapsed_time"].map(
+                    test2time
+                )
 
         def val2idx(val_list):
             val2idx = {}
