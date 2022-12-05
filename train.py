@@ -50,7 +50,7 @@ def run_kfold(k, config, data):
         print(
             f"-------------------------START FOLD {fold + 1} MODEL LOADING----------------------"
         )
-        model = models.get_model(config)
+        model = models.get_models(config)
 
         print(
             f"-------------------------DONE FOLD {fold + 1} MODEL LOADING-----------------------"
