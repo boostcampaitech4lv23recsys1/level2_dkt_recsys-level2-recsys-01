@@ -55,7 +55,7 @@ class BaseTrainer(object):
         self.min_val_loss = inf
         self.model_name = type(self.model).__name__
 
-    def _train_epoch(self, epoch):
+    def _train_epoch(self):
         """
         Training logic for an epoch
 
@@ -138,7 +138,6 @@ class BaseTrainer(object):
             if self.lr_scheduler:
                 self.lr_scheduler.step()
 
-<<<<<<< HEAD
             if result["val_loss"] < self.min_val_loss:
                 self.state = {
                     "model_name": self.model_name,
@@ -146,11 +145,6 @@ class BaseTrainer(object):
                     "state_dict": self.model.state_dict(),
                 }
                 self.min_val_loss = result["val_loss"]
-=======
-            if result['val_aucroc'] > self.best_val_auc and epoch > self.epochs // 2:
-                self.best_val_auc = result['val_aucroc']
-                self._save_checkpoint(epoch)
->>>>>>> 7c7f87c369a3e6d4c162e4a9a5640f5fd4556a6f
 
         self._save_checkpoint()
 
