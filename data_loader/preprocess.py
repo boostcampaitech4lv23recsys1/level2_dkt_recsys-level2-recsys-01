@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import GroupKFold
+from sklearn.preprocessing import LabelEncoder
 
 
 class Preprocess:
@@ -10,6 +11,7 @@ class Preprocess:
 
         self.cat_cols = config["cat_cols"]
         self.num_cols = config["num_cols"]
+        self.augmentation = self.cfg_preprocess["data_augmentation"]
 
         self.feature_engineering = (
             ["userID", "answerCode", "testId"] + self.cat_cols + self.num_cols
@@ -77,6 +79,11 @@ class Preprocess:
         if is_train:
             data = data[data["answerCode"] != -1].reset_index(drop=True)
         else:
+            # if self.augmentation:
+            #     data = data[~data["userID_origin"].isin(trainusers)].reset_index(
+            #         drop=True
+            #     )
+            # else:
             data = data[~data["userID"].isin(trainusers)].reset_index(drop=True)
         
         
@@ -109,16 +116,47 @@ class Preprocess:
         self.train_data = self.load_data_from_file()
         self.train_data = self.__feature_engineering(self.train_data)
         self.train_data = self.__preprocessing(self.train_data, is_train=True)
+        if self.augmentation:
+            self.train_data = self.__data_augmentation(self.train_data)
         return self.train_data
 
     def load_test_data(self):
         self.test_data = self.load_data_from_file()
         self.test_data = self.__feature_engineering(self.test_data)
         self.test_data = self.__preprocessing(self.test_data, is_train=False)
+        # test에는 augmentation이 없는게 맞다?
         return self.test_data
 
     def gkf_data(self, data):
         k = self.cfg_preprocess["num_fold"]
         gkf = GroupKFold(n_splits=k)
         group = data["userID"].tolist()
+
         return gkf, group
+
+    def __data_augmentation(self, data: pd.DataFrame):
+        """
+        유저가 푼 문제를 max_seq_len에 따라 새로운 유저로 분리
+        유저의 최댓값이 7441이라 그냥 10000을 곱해서 아예 새로운 유저를 만들어줬음
+
+        즉, 새로 나온 유저의 id를 기존의 아이디로 바꾸고 싶으면
+        10000으로 나눴을 때의 몫을 취하면 됨.
+        """
+        max_seq_len = self.config["dataset"]["max_seq_len"]
+        group = data.groupby("userID").get_group
+        unique_user = data["userID"].unique()
+
+        whole_new_user_id = []
+        for user in unique_user:
+            temp_new_user_id = np.zeros_like(group(user)["userID"])
+            added_to_user = 10000 * user
+            temp_new_user_id += [
+                x // max_seq_len + added_to_user for x in range(len(temp_new_user_id))
+            ]
+            whole_new_user_id.extend(temp_new_user_id)
+
+        data["userID_origin"] = data["userID"].copy()
+        encoder = LabelEncoder()
+        data["userID"] = encoder.fit_transform(whole_new_user_id)
+        
+        return data
