@@ -8,7 +8,7 @@ from data_loader.preprocess import Preprocess
 from data_loader.dataset import BaseDataset, get_loader
 from sklearn.model_selection import KFold
 from trainer import BaseTrainer
-from utils import read_json
+from utils import read_json, set_seed
 from logger import wandb_logger
 
 import wandb
@@ -24,6 +24,10 @@ def main(config):
     preprocess = Preprocess(config)
     data = preprocess.load_train_data()
 
+    print("-------------------------using cat coloumn list-------------------------")
+    print(config["cat_cols"])
+    print("-------------------------using num coloumn list-------------------------")
+    print(config["num_cols"])
     print("---------------------------DONE PREPROCESSING----------------------------")
     wandb_train_func = functools.partial(
         run_kfold, config["preprocess"]["num_fold"], config, data
@@ -38,7 +42,7 @@ def main(config):
 
 
 def run_kfold(k, config, data):
-    kf = KFold(n_splits=k)
+    kf = KFold(n_splits=k, shuffle=True, random_state=config["trainer"]["seed"])
 
     now = datetime.now(timezone("Asia/Seoul")).strftime(f"%Y-%m-%d_%H:%M")
     for fold, (train_idx, val_idx) in enumerate(
@@ -88,5 +92,6 @@ if __name__ == "__main__":
     config = read_json(args.config)
 
     config["device"] = "cuda" if torch.cuda.is_available() else "cpu"
+    set_seed(config["trainer"]["seed"])
 
     main(config)
