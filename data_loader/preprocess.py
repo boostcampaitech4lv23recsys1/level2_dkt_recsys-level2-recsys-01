@@ -78,6 +78,8 @@ class Preprocess:
             data = data[data["answerCode"] != -1].reset_index(drop=True)
         else:
             data = data[~data["userID"].isin(trainusers)].reset_index(drop=True)
+        
+        
 
         # 주기적인 성질(날짜, 요일, 월 등)을 갖는 column을 sin, cos을 이용해서 변환하기
         def process_periodic(data: pd.Series, period: int, process_type: str = "sin"):
@@ -88,7 +90,12 @@ class Preprocess:
 
         # 사용방법 예시
         # data["주기적 성질을 갖는 컬럼"] = process_periodic(data=data["주기적 성질을 갖는 컬럼"], period=주기)
+        if "test_hour" in columns:
+            data["test_hour"] = process_periodic(data=data["test_hour"], period=24)
 
+        if "test_month" in columns:
+            data["test_month"] = process_periodic(data=data["test_month"], period=12)
+            
         return data
 
     def load_data_from_file(self):
