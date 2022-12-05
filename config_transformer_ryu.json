@@ -1,7 +1,7 @@
 {
+  "user": "ryubright",
   "project": "transformer",
   "entity": "dkt-dinosaur",
-  "user": "sssu><",
 
   "cat_cols": [
     "KnowledgeTag",
@@ -30,7 +30,7 @@
   "preprocess": {
     "data_dir": "./data",
     "data_ver": "v2.1",
-    "fe_elapsed_time": [200, "mean"],
+    "fe_elapsed_time": [600, "mean"],
     "use_k_fold": true,
     "num_fold": 5
   },
@@ -43,21 +43,22 @@
   "data_loader": {
     "type": "사용할 DataLoader",
     "args": {
-      "batch_size": 16,
+      "batch_size": 64,
       "num_workers": 4,
       "collate_fn": "collate_fn"
     }
   },
 
   "arch": {
-    "type": "Transformer",
+    "type": "TransformerLSTM",
     "args": {
       "dim_model": 128,
-      "dim_ffn": 64,
+      "dim_ffn": 128,
       "embedding_dim": 64,
       "num_heads": 2,
-      "n_layers": 1,
-      "dropout_rate": 0.2
+      "n_layers_transformer": 1,
+      "n_layers_LSTM": 1,
+      "dropout_rate": 0.3
     }
   },
 
