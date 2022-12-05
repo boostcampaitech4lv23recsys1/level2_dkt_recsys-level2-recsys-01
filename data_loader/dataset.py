@@ -59,7 +59,7 @@ class BaseDataset(Dataset):
                 (
                     torch.zeros(
                         self.max_seq_len - seq_len,
-                        len(self.cur_cat_col)-1,
+                        len(self.cur_cat_col) - 1,
                         dtype=torch.long,
                     ),
                     torch.tensor(cat, dtype=torch.long),
@@ -69,7 +69,7 @@ class BaseDataset(Dataset):
                 (
                     torch.zeros(
                         self.max_seq_len - seq_len,
-                        len(self.cur_num_col)-1,
+                        len(self.cur_num_col) - 1,
                         dtype=torch.float32,
                     ),
                     torch.tensor(num, dtype=torch.float32),
