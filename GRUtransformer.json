@@ -15,8 +15,6 @@
         "ans_cumsum",
         "time_question_median",
         "tag_acc",
-        "elapsed_time_mean",
-        "elapsed_time_median",
         "KnowledgeTag_et_std",
         "KnowledgeTag_et_mean",
         "test_acc",
@@ -37,7 +35,7 @@
   
     "dataset": {
       "type": "BaseDataset",
-      "max_seq_len": 150
+      "max_seq_len": 128
     },
   
     "data_loader": {
@@ -77,7 +75,7 @@
   
     "trainer": {
       "type": "사용할 Trainer",
-      "epochs": 100,
+      "epochs": 70,
       "metric": ["aucroc", "accuracy"],
       "seed": 42,
       "save_dir": "/opt/ml/model",
