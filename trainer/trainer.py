@@ -65,6 +65,8 @@ class BaseTrainer(object):
         total_targets = []
 
         self.model.train()
+        self.train_metrics.reset()
+        self.valid_metrics.reset()
         print("...Train...")
         for data in tqdm(self.train_data_loader):
             target = data['answerCode'].to(self.device)
