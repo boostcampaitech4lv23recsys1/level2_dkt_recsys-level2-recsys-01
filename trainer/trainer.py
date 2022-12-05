@@ -28,31 +28,32 @@ class BaseTrainer(object):
         train_data_loader: DataLoader,
         valid_data_loader: DataLoader,
         config: dict,
-        fold: int
+        fold: int,
     ):
         self.model = model
         self.train_data_loader = train_data_loader
         self.valid_data_loader = valid_data_loader
         self.config = config
-        self.cfg_trainer = config['trainer']
+        self.cfg_trainer = config["trainer"]
         self.fold = fold
 
-        self.device = config['device']
+        self.device = config["device"]
 
         # 학습 관련 파라미터
         self.criterion = loss.get_loss(config)
-        self.metric_ftns = self.cfg_trainer['metric']
-        self.optimizer = optimizer.get_optimizer(self.model, config['optimizer'])
+        self.metric_ftns = self.cfg_trainer["metric"]
+        self.optimizer = optimizer.get_optimizer(self.model, config["optimizer"])
         self.lr_scheduler = scheduler.get_scheduler(self.optimizer, config)
 
-        self.train_metrics = MetricTracker('loss', *self.metric_ftns)
-        self.valid_metrics = MetricTracker('loss', *self.metric_ftns)
+        self.train_metrics = MetricTracker("loss", *self.metric_ftns)
+        self.valid_metrics = MetricTracker("loss", *self.metric_ftns)
 
-        self.epochs = self.cfg_trainer['epochs']
+        self.epochs = self.cfg_trainer["epochs"]
         self.start_epoch = 1
-        
-        self.save_dir = self.cfg_trainer['save_dir']
-        self.best_val_auc = 0
+
+        self.save_dir = self.cfg_trainer["save_dir"]
+        self.min_val_loss = inf
+        self.model_name = type(self.model).__name__
 
     def _train_epoch(self):
         """
@@ -66,15 +67,14 @@ class BaseTrainer(object):
 
         self.model.train()
         self.train_metrics.reset()
-        self.valid_metrics.reset()
         print("...Train...")
         for data in tqdm(self.train_data_loader):
-            target = data['answerCode'].to(self.device)
+            target = data["answerCode"].to(self.device)
             output = self.model(data)
             loss = self._compute_loss(output, target)
             # target = target.detach().cpu()
-            self.train_metrics.update('loss', loss.item())
-            
+            self.train_metrics.update("loss", loss.item())
+
             output = output[:, -1]
             target = target[:, -1]
 
@@ -90,22 +90,23 @@ class BaseTrainer(object):
             # breakpoint()
             output_to_cpu = torch.concat(total_outputs).cpu().numpy()
             target_to_cpu = torch.concat(total_targets).cpu().numpy()
-            
+
             self.train_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
         train_log = self.train_metrics.result()
-        log.update(**{f'train_{k}' : v for k, v in train_log.items()})
+        log.update(**{f"train_{k}": v for k, v in train_log.items()})
 
         total_outputs = []
         total_targets = []
         self.model.eval()
+        self.valid_metrics.reset()
         print("...Valid...")
         for data in tqdm(self.valid_data_loader):
-            target = data['answerCode'].to(self.device)
+            target = data["answerCode"].to(self.device)
 
             self.optimizer.zero_grad()
             output = self.model(data)
             loss = self._compute_loss(output, target)
-            self.valid_metrics.update('loss', loss.item())
+            self.valid_metrics.update("loss", loss.item())
 
             output = output[:, -1]
             target = target[:, -1]
@@ -119,7 +120,7 @@ class BaseTrainer(object):
             target_to_cpu = torch.concat(total_targets).cpu().numpy()
             self.valid_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
         val_log = self.valid_metrics.result()
-        log.update(**{f'val_{k}' : v for k, v in val_log.items()})
+        log.update(**{f"val_{k}": v for k, v in val_log.items()})
 
         return log
 
@@ -129,34 +130,37 @@ class BaseTrainer(object):
         """
         # wandb_logger.init(self.model, self.config)
         for epoch in range(self.start_epoch, self.epochs + 1):
-            print(f"-----------------------------EPOCH {epoch} TRAINING----------------------------")
+            print(
+                f"-----------------------------EPOCH {epoch} TRAINING----------------------------"
+            )
             result = self._train_epoch()
             wandb.log(result, step=epoch)
 
             if self.lr_scheduler:
                 self.lr_scheduler.step()
 
-            if result['val_aucroc'] > self.best_val_auc:
-                self.best_val_auc = result['val_aucroc']
-                self._save_checkpoint(epoch)
+            if result["val_loss"] < self.min_val_loss:
+                self.state = {
+                    "model_name": self.model_name,
+                    "epoch": epoch,
+                    "state_dict": self.model.state_dict(),
+                }
+                self.min_val_loss = result["val_loss"]
 
-    def _save_checkpoint(self, epoch):
+        self._save_checkpoint()
+
+    def _save_checkpoint(self):
         print("...SAVING MODEL...")
         """
         Saving checkpoints
         :param epoch: current epoch number
         """
-        model_name = type(self.model).__name__
-        state = {
-            'model_name': model_name,
-            'epoch': epoch,
-            'state_dict': self.model.state_dict(),
-        }
-        save_path = os.path.join(self.save_dir, model_name)
+
+        save_path = os.path.join(self.save_dir, self.model_name)
         os.makedirs(save_path, exist_ok=True)
-        save_path = os.path.join(save_path, f'fold_{self.fold}_best_model.pt')
-        torch.save(state, save_path)
-    
+        save_path = os.path.join(save_path, f"fold_{self.fold}_best_model.pt")
+        torch.save(self.state, save_path)
+
     # loss계산하고 parameter update!
     def _compute_loss(self, output, target):
         """
@@ -172,17 +176,18 @@ class BaseTrainer(object):
         # loss = torch.mean(loss)
         return loss
 
+
 class XGBoostTrainer:
     def __init__(
-            self,
-            model,
-            train_X,
-            train_y,
-            test_X,
-            test_y,
-            features,
-            early_stopping_rounds=100,
-            verbose=5,
+        self,
+        model,
+        train_X,
+        train_y,
+        test_X,
+        test_y,
+        features,
+        early_stopping_rounds=100,
+        verbose=5,
     ):
 
         self.model = model
@@ -196,14 +201,13 @@ class XGBoostTrainer:
         self.early_stopping_rounds = early_stopping_rounds
         self.verbose = verbose
 
-
     def train(self):
         self.model.fit(
             X=self.train_X[self.features],
             y=self.train_y,
             eval_set=[(self.test_X[self.features], self.test_y)],
             early_stopping_rounds=self.early_stopping_rounds,
-            verbose=self.verbose
+            verbose=self.verbose,
         )
 
         preds = self.model.predict_proba(self.test_X[self.features])[:, 1]
@@ -211,4 +215,3 @@ class XGBoostTrainer:
         auc = roc_auc_score(self.test_y, preds)
 
         print(f"VALID AUC : {auc} ACC : {acc}\n")
-
