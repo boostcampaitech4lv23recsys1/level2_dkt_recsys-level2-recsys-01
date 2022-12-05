@@ -37,9 +37,10 @@ def inference_w_one_model(model, data_loader, config, fold):
 
 
 def main(config):
+    print("---------------------------START PREPROCESSING---------------------------")
     preprocess = Preprocess(config)
     test = preprocess.load_test_data()
-    print("---------------------------DONE PREPROCESSING---------------------------")
+    print("---------------------------DONE PREPROCESSING----------------------------")
     test_set = BaseDataset(test, range(len(test)), config)
     test_loader = DataLoader(
         test_set,
@@ -53,7 +54,7 @@ def main(config):
 
     k = config["preprocess"]["num_fold"]
     final_predict = []
-    print("---------------------------START FOLD INFERENCE---------------------------")
+    print("---------------------------START FOLD INFERENCE--------------------------")
     for i in range(k):
         predict = inference_w_one_model(model, test_loader, config, i + 1)
         final_predict.append(predict)
@@ -73,7 +74,7 @@ def main(config):
         f"inference_{cur_time}_{config['preprocess']['data_ver']}.csv",
     )
     sub.to_csv(sub_path, index=None)
-    print("---------------------------DONE PREDICTION---------------------------")
+    print("---------------------------DONE PREDICTION-------------------------------")
 
 
 if __name__ == "__main__":
