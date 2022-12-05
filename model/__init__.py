@@ -4,4 +4,4 @@ from .transformer import Transformer
 from .transformerLSTM import TransformerLSTM
 from .transformerGRU import TransformerGRU
 
-from .getmodel import get_model
+from .get_model import get_models
