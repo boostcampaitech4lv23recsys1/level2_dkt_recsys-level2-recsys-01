@@ -55,7 +55,7 @@ class BaseTrainer(object):
         self.min_val_loss = inf
         self.model_name = type(self.model).__name__
 
-    def _train_epoch(self, epoch):
+    def _train_epoch(self):
         """
         Training logic for an epoch
 
