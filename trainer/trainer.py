@@ -87,9 +87,10 @@ class BaseTrainer(object):
             self.optimizer.step()
         for met in self.metric_ftns:
             ftns = metric.get_metric(met)
-            output_to_cpu = torch.cat(total_outputs).cpu().numpy()
-            target_to_cpu = torch.cat(total_targets).cpu().numpy()
-            
+            # breakpoint()
+            output_to_cpu = torch.concat(total_outputs).cpu().numpy()
+            target_to_cpu = torch.concat(total_targets).cpu().numpy()
+
             self.train_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
         train_log = self.train_metrics.result()
         log.update(**{f"train_{k}": v for k, v in train_log.items()})
@@ -115,8 +116,8 @@ class BaseTrainer(object):
 
         for met in self.metric_ftns:
             ftns = metric.get_metric(met)
-            output_to_cpu = torch.cat(total_outputs).cpu().numpy()
-            target_to_cpu = torch.cat(total_targets).cpu().numpy()
+            output_to_cpu = torch.concat(total_outputs).cpu().numpy()
+            target_to_cpu = torch.concat(total_targets).cpu().numpy()
             self.valid_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
         val_log = self.valid_metrics.result()
         log.update(**{f"val_{k}": v for k, v in val_log.items()})
