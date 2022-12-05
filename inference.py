@@ -5,8 +5,6 @@ from data_loader.preprocess import Preprocess
 from data_loader.dataset import BaseDataset, collate_fn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from pytz import timezone
-from datetime import datetime
 
 import model as models
 from utils import read_json
@@ -31,7 +29,7 @@ def inference_w_one_model(model, data_loader, config, fold):
     predict_list = []
 
     with torch.no_grad():
-        for data in tqdm(data_loader):
+        for data in data_loader:
             output = model(data)
             output = output.detach().cpu().numpy()
             predict_list.append(output[:, -1][0])
@@ -39,7 +37,6 @@ def inference_w_one_model(model, data_loader, config, fold):
 
 
 def main(config):
-    now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
     preprocess = Preprocess(config)
     test = preprocess.load_test_data()
     print("---------------------------DONE PREPROCESSING---------------------------")
@@ -52,33 +49,7 @@ def main(config):
         collate_fn=collate_fn,
     )
 
-    if config["arch"]["type"] == "LSTM":
-        model = getattr(models, config["arch"]["type"])(config).to(config["device"])
-    if config["arch"]["type"] == "Transformer":
-        model_args = config["arch"]["args"]
-        model = getattr(models, config["arch"]["type"])(
-            dim_model=model_args["dim_model"],
-            dim_ffn=model_args["dim_ffn"],
-            num_heads=model_args["num_heads"],
-            n_layers=model_args["n_layers"],
-            dropout_rate=model_args["dropout_rate"],
-            embedding_dim=model_args["embedding_dim"],
-            device=config["device"],
-            config=config,
-        ).to(config["device"])
-    if config["arch"]["type"] == "TransformerLSTM":
-        model_config = config["arch"]["args"]
-        model = getattr(models, config["arch"]["type"])(
-            dim_model=model_config["dim_model"],
-            dim_ffn=model_config["dim_ffn"],
-            num_heads=model_config["num_heads"],
-            n_layers_transformer=model_config["n_layers_transformer"],
-            n_layers_LSTM=model_config["n_layers_LSTM"],
-            dropout_rate=model_config["dropout_rate"],
-            embedding_dim=model_config["embedding_dim"],
-            device=config["device"],
-            config=config,
-        ).to(config["device"])
+    model = models.get_models(config)
 
     k = config["preprocess"]["num_fold"]
     final_predict = []
@@ -96,9 +67,10 @@ def main(config):
 
     sub_path = config["trainer"]["submission_dir"]
     os.makedirs(sub_path, exist_ok=True)
-    now = datetime.now(timezone('Asia/Seoul')).strftime(f'%Y-%m-%d_%H:%M')
+    cur_time = str(datetime.now(timezone("Asia/Seoul")))[:19]
     sub_path = os.path.join(
-        sub_path, f"{now}inference_{config['preprocess']['data_ver']}.csv"
+        sub_path,
+        f"inference_{cur_time}_{config['preprocess']['data_ver']}.csv",
     )
     sub.to_csv(sub_path, index=None)
     print("---------------------------DONE PREDICTION---------------------------")
