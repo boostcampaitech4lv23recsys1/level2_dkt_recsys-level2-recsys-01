@@ -1,7 +1,7 @@
 import model as models
 
 
-def get_model(config):
+def get_models(config):
     if config["arch"]["type"] == "Transformer":
         model_config = config["arch"]["args"]
         model = getattr(models, config["arch"]["type"])(
