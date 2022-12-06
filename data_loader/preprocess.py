@@ -11,6 +11,7 @@ class Preprocess:
 
         self.cat_cols = config["cat_cols"]
         self.num_cols = config["num_cols"]
+        self.one_embedding = config["one_embedding"]
         self.augmentation = self.cfg_preprocess["data_augmentation"]
 
         self.feature_engineering = (
@@ -55,24 +56,25 @@ class Preprocess:
                     test2time
                 )
 
-        def val2idx(val_list):
+        def val2idx(start, val_list):
             val2idx = {}
             for idx, val in enumerate(val_list):
-                val2idx[val] = idx + 1
+                val2idx[val] = start + idx + 1 if self.one_embedding else idx + 1
             return val2idx
 
         # 어차피 cat_cols일 경우만 돌아가는 거라면 columns가 아니라 cat_cols를 돌아도 되는거 아닌가?
-        for col in columns:
-            if col in self.cat_cols:
-                if col != "answerCode":
-                    tmp2idx = val2idx(data[col].unique().tolist())
-                    tmp = data[col].map(tmp2idx)
-                    data.loc[:, f"{col}2idx"] = tmp
-                    data = data.drop([col], axis=1)
+        self.config["cat_col_len"] = {}
+        offset = 0
+        for col in self.cat_cols:
+            col_unique = data[col].unique().tolist()
+            tmp2idx = val2idx(offset, col_unique)
+            tmp = data[col].map(tmp2idx)
+            data.loc[:, f"{col}2idx"] = tmp
+            data = data.drop([col], axis=1)
+            offset += len(col_unique)
+            self.config["cat_col_len"][col] = len(col_unique)
 
-        self.config["cat_col_len"] = {
-            col: len(data[f"{col}2idx"]) for col in self.cat_cols
-        }
+        self.config["offset"] = offset
 
         # data['userID'] = val2idx(data['userID'].unique().tolist()) # 얘를 해야함
 
