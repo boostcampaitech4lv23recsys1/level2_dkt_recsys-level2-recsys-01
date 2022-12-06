@@ -7,7 +7,6 @@ import random
 
 import pandas as pd
 
-
 class BaseDataset(Dataset):
     def __init__(self, data, idx, config) -> None:
         super().__init__()

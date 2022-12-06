@@ -1,7 +1,3 @@
-"""
-logging을 관리해주는 wandb 함수
-"""
-
 def sweep_update(config, w_config):
     config["data_loader"]["args"]["batch_size"] = w_config["batch_size"]
     config["trainer"]["epochs"] = w_config["epochs"]

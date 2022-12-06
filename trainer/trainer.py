@@ -1,7 +1,3 @@
-"""
-train.py에서 이 파일을 호출
-주어진 data에 대해서 학습만 시키면 됨
-"""
 import os
 import torch
 from numpy import inf
@@ -150,7 +146,7 @@ class BaseTrainer(object):
 
     def _compute_loss(self, output, target):
         loss = self.criterion(output, target)
-        
+
         return loss
 
 

@@ -20,14 +20,16 @@ def set_seed(seed=417):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
+
 def read_json(fname):
     fname = Path(fname)
-    with fname.open('rt') as handle:
+    with fname.open("rt") as handle:
         return json.load(handle, object_hook=OrderedDict)
+
 
 class MetricTracker:
     def __init__(self, *keys):
-        self._data = pd.DataFrame(index=keys, columns=['total', 'counts', 'average'])
+        self._data = pd.DataFrame(index=keys, columns=["total", "counts", "average"])
         self.reset()
 
     def reset(self):
@@ -47,32 +49,32 @@ class MetricTracker:
 
 
 FEATURES = [
-    'userID',
-    'assessmentItemID',
-    'testId',
-    'week_num',
-    'elapsed_time',
-    'time_question_median',
-    'time_user_median',
-    'time_user_mean',
-    'KnowledgeTag',
-    'test_cat',
-    'test_id',
-    'question_number',
-    'question_numslen',
-    'test_month',
-    'test_day',
-    'test_hour',
-    'user_acc',
-    'test_acc',
-    'tag_acc',
-    'question_acc',
-    'month_acc',
-    'hour_acc',
-    'exp_test',
-    'exp_tag',
-    'exp_question',
-    'ans_cumsum',
-    'continuous_user',
-    'continuous_test'
+    "userID",
+    "assessmentItemID",
+    "testId",
+    "week_num",
+    "elapsed_time",
+    "time_question_median",
+    "time_user_median",
+    "time_user_mean",
+    "KnowledgeTag",
+    "test_cat",
+    "test_id",
+    "question_number",
+    "question_numslen",
+    "test_month",
+    "test_day",
+    "test_hour",
+    "user_acc",
+    "test_acc",
+    "tag_acc",
+    "question_acc",
+    "month_acc",
+    "hour_acc",
+    "exp_test",
+    "exp_tag",
+    "exp_question",
+    "ans_cumsum",
+    "continuous_user",
+    "continuous_test",
 ]
