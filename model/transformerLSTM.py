@@ -29,29 +29,27 @@ class TransformerLSTM(Transformer):
         self.lstm = nn.LSTM(
             input_size=dim_model,
             hidden_size=dim_model,
-            num_layers=n_layers_LSTM,  # 이거 lstm이랑 transformer랑 달라야하지않나?
+            num_layers=n_layers_LSTM,
             batch_first=True,
             dropout=dropout_rate,
             bidirectional=False,
         )
 
     def forward(self, X):
-        # Embedding
         cat_feature = X["cat"].to(self.device)
         num_feature = X["num"].to(self.device)
         mask = X["mask"]
-
-        # past
+        
         cat_emb_list = []
         for idx, cat_col in enumerate(self.cat_cols):
             cat_emb_list.append(
                 self.emb_cat_dict[cat_col](cat_feature[:, :, idx])
-            )  # 데이터에 따라 수정
+            )
 
         cat_emb = torch.cat(cat_emb_list, dim=-1)
         cat_emb = self.cat_comb_proj(cat_emb)
 
-        num_emb = self.num_comb_proj(num_feature)  # 마스크를 빼고 넣는다.
+        num_emb = self.num_comb_proj(num_feature)
         X = torch.cat([cat_emb, num_emb], -1)
 
         mask_pad = (

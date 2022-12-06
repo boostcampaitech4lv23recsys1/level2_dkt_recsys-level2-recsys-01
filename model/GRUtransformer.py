@@ -4,11 +4,11 @@ import torch
 from model.layer.encoder import Encoder
 
 
-class GRUtransformer(LSTM): # LSTM의 
+class GRUtransformer(LSTM):
     def __init__(self, config):
         super().__init__(config)
         self.modelargs = config["arch"]["args"]
-        self.GRU = nn.GRU( # LSTM이 아니라 GRU를 정의
+        self.GRU = nn.GRU(
             input_size=self.modelargs["dim_model"],
             hidden_size=self.modelargs["dim_model"],
             num_layers=self.modelargs["n_layers_GRU"],
@@ -16,7 +16,7 @@ class GRUtransformer(LSTM): # LSTM의
             dropout=self.modelargs["dropout_rate"],
             bidirectional=False,
         )
-        self.encoder = Encoder( # transformer에서 사용하는 Encoder
+        self.encoder = Encoder(
             dim_model=self.modelargs["dim_model"],
             dim_ffn=self.modelargs["dim_ffn"],
             num_heads=self.modelargs["num_heads"],
@@ -24,13 +24,11 @@ class GRUtransformer(LSTM): # LSTM의
             n_layers=self.modelargs["n_layers_transformer"],
         )
         
-    def forward(self, input): # transformer와 LSTM 상당 부분 겹침
-        # Embedding
+    def forward(self, input):
         cat_feature = input['cat'].to(self.device)
         num_feature = input['num'].to(self.device)
         mask = input["mask"]
         
-        # past
         cat_emb_list = []
         for idx, cat_col in enumerate(self.cat_cols):
             cat_emb_list.append(self.emb_cat_dict[cat_col](cat_feature[:, :, idx]))
@@ -50,8 +48,8 @@ class GRUtransformer(LSTM): # LSTM의
             self.device
         )  # (batch_size, 1, max_len, max_len)
 
-        hidden_out, cell_out = self.GRU(self.dropout(X)) # GRU
-        out = self.encoder(hidden_out, mask) # transformer
+        hidden_out, _ = self.GRU(self.dropout(X))
+        out = self.encoder(hidden_out, mask)
         out = self.prediction(out)
         
         return out.squeeze(2)

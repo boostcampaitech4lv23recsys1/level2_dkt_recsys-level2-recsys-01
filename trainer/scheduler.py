@@ -8,6 +8,7 @@ def get_scheduler(optimizer, config):
             return ReduceLROnPlateau(
                 optimizer, patience=10, factor=0.5, mode="max", verbose=True
             )
+            
         if config['lr_scheduler'] == "linear_warmup":
             warmup_steps = 0 # len(dataloader) * 2
             total_steps = 0 # len(dataloader) * epochs

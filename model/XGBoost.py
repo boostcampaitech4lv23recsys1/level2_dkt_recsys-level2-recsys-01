@@ -13,7 +13,7 @@ class XGBoost(object):
             n_estimators=70,
             nthread=4,
             objective="binary:logistic",
-            random_state=42,
+            random_state=417,
     ):
         self.model = XGBClassifier(
             booster=booster,

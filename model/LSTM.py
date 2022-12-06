@@ -38,31 +38,23 @@ class LSTM(nn.Module):
             self.hidden_dim, self.hidden_dim, self.n_layers, batch_first=True, dropout=self.dropout_rate
         )
 
-        # Fully connected layer
         self.prediction = nn.Sequential(nn.Linear(self.hidden_dim, 1), nn.Sigmoid())
         
-
     def forward(self, input):
-
-        # test, question, tag, _, mask, interaction = input
-
-        # batch_size = input['y'].size(0)
- 
-        # Embedding
         cat_feature = input['cat'].to(self.device)
         num_feature = input['num'].to(self.device)
 
-        # past
         cat_emb_list = []
         for idx, cat_col in enumerate(self.cat_cols):
-            cat_emb_list.append(self.emb_cat_dict[cat_col](cat_feature[:, :, idx])) # 데이터에 따라 수정
-
+            cat_emb_list.append(self.emb_cat_dict[cat_col](cat_feature[:, :, idx]))
+            
         cat_emb = torch.cat(cat_emb_list, dim = -1)
         cat_emb = self.cat_comb_proj(cat_emb)
-        num_emb = self.num_comb_proj(num_feature) # 마스크를 빼고 넣는다.
+        num_emb = self.num_comb_proj(num_feature)
         X = torch.cat([cat_emb, num_emb], -1)
 
         out, _ = self.lstm(self.dropout(X))
         out = self.prediction(out)
         
         return out.squeeze(2)
+    
