@@ -100,6 +100,9 @@ class Preprocess:
         if "test_hour" in columns:
             data["test_hour"] = process_periodic(data=data["test_hour"], period=24)
 
+        if "test_day" in columns:
+            data["test_day"] = process_periodic(data=data["test_day"], period=365)
+
         if "test_month" in columns:
             data["test_month"] = process_periodic(data=data["test_month"], period=12)
             

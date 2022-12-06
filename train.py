@@ -30,24 +30,25 @@ def main(config):
     print("-------------------------using num coloumn list-------------------------")
     print(config["num_cols"])
     print("---------------------------DONE PREPROCESSING----------------------------")
-    wandb_train_func = functools.partial(
-        run_kfold, config["preprocess"]["num_fold"], config, data
-    )
+    now = datetime.now(timezone("Asia/Seoul")).strftime(f"%Y-%m-%d_%H:%M")
+    
     print("-----------------------------START TRAINING------------------------------")
     if "sweep" in config:
-        # breakpoint()
+        wandb_train_func = functools.partial(
+            run_kfold_sweep, config["preprocess"]["num_fold"], config, data, now
+        )
         sweep_config = json.loads(json.dumps(config["sweep"]))
-        sweep_id = wandb.sweep(sweep_config)
-        wandb.agent(sweep_id, function=wandb_train_func, count=1)
+        sweep_id = wandb.sweep(sweep_config, entity=config["entity"], project=config["project"])
+        wandb.agent(sweep_id, function=wandb_train_func)
     else:
-        wandb_train_func()
+        run_kfold(config["preprocess"]["num_fold"], config, data, now)
     print("---------------------------DONE TRAINING---------------------------")
 
-
-def run_kfold(k, config, data):
+def run_kfold_sweep(k, config, data, now):
     kf = KFold(n_splits=k, shuffle=True, random_state=config["trainer"]["seed"])
-
-    now = datetime.now(timezone("Asia/Seoul")).strftime(f"%Y-%m-%d_%H:%M")
+    wandb.init(name=f'{now}_{config["user"]}_sweep')
+    wandb_logger.sweep_update(config, wandb.config)
+    val_fold = 0
     for fold, (train_idx, val_idx) in enumerate(
         kf.split(data["userID"].unique().tolist())
     ):
@@ -57,27 +58,60 @@ def run_kfold(k, config, data):
         print(
             f"-------------------------START FOLD {fold + 1} MODEL LOADING----------------------"
         )
-        w_config = wandb_logger.init(now, config, fold+1)
-
-        # config update for sweep
-        if "sweep" in config:
-            wandb_logger.sweep_update(config, w_config)
 
         model = models.get_models(config)
-<<<<<<< HEAD
+
+        print(
+            f"-------------------------DONE FOLD {fold + 1} MODEL LOADING-----------------------"
+        )
+
+        train_set = BaseDataset(data, train_idx, config)
+        val_set = BaseDataset(data, val_idx, config)
+
+        train, valid = get_loader(train_set, val_set, config["data_loader"]["args"])
+
+        trainer = BaseTrainer(
+            model=model,
+            train_data_loader=train,
+            valid_data_loader=valid,
+            config=config,
+            fold=fold + 1,
+
+        )
+
+        result = trainer.train()
+        wandb.log(result, step=fold+1)
+        val_fold += result['val_aucroc']
+        print(
+            f"---------------------------DONE FOLD {fold + 1} TRAINING--------------------------"
+        )
+    wandb.log({"val_fold": val_fold/k})
+
+def run_sweep():
+    pass
+
+def run_kfold(k, config, data, now):
+    kf = KFold(n_splits=k, shuffle=True, random_state=config["trainer"]["seed"])
+    
+    for fold, (train_idx, val_idx) in enumerate(
+        kf.split(data["userID"].unique().tolist())
+    ):
+        print(
+            f"-------------------------START FOLD {fold + 1} TRAINING---------------------------"
+        )
+        print(
+            f"-------------------------START FOLD {fold + 1} MODEL LOADING----------------------"
+        )
+
+        model = models.get_models(config)
         
+        wandb.init(project=config["project"], entity=config["entity"], name=f'{now}_{config["user"]}_fold_{fold+1}')
         wandb.watch(model)
 
         print(
             f"-------------------------DONE FOLD {fold + 1} MODEL LOADING-----------------------"
         )
-        
-=======
-        wandb_logger.init(now, model, config, fold + 1)
-        print(
-            f"--------------------------START FOLD {fold+1} TRAINING--------------------------"
-        )
->>>>>>> e77209cbf6be3de7785ef11fc495726b82ae85d9
+
         train_set = BaseDataset(data, train_idx, config)
         val_set = BaseDataset(data, val_idx, config)
 

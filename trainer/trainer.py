@@ -53,6 +53,7 @@ class BaseTrainer(object):
 
         self.save_dir = self.cfg_trainer["save_dir"]
         self.min_val_loss = inf
+        self.max_val_aucroc = 0
         self.model_name = type(self.model).__name__
 
     def _train_epoch(self):
@@ -72,7 +73,6 @@ class BaseTrainer(object):
             target = data["answerCode"].to(self.device)
             output = self.model(data)
             loss = self._compute_loss(output, target)
-            # target = target.detach().cpu()
             self.train_metrics.update("loss", loss.item())
 
             output = output[:, -1]
@@ -85,9 +85,9 @@ class BaseTrainer(object):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+
         for met in self.metric_ftns:
             ftns = metric.get_metric(met)
-            # breakpoint()
             output_to_cpu = torch.concat(total_outputs).cpu().numpy()
             target_to_cpu = torch.concat(total_targets).cpu().numpy()
 
@@ -128,26 +128,31 @@ class BaseTrainer(object):
         """
         Full training logic
         """
-        # wandb_logger.init(self.model, self.config)
+        best_result = {}
+
         for epoch in range(self.start_epoch, self.epochs + 1):
             print(
                 f"-----------------------------EPOCH {epoch} TRAINING----------------------------"
             )
             result = self._train_epoch()
-            wandb.log(result, step=epoch)
+            if "sweep" not in self.config:
+                wandb.log(result, step=epoch)
 
             if self.lr_scheduler:
                 self.lr_scheduler.step()
 
-            if result["val_loss"] < self.min_val_loss:
+            if result["val_aucroc"] > self.max_val_aucroc:
                 self.state = {
                     "model_name": self.model_name,
                     "epoch": epoch,
                     "state_dict": self.model.state_dict(),
                 }
-                self.min_val_loss = result["val_loss"]
-
-        self._save_checkpoint()
+                self.max_val_aucroc = result["val_aucroc"]
+                best_result = result
+        if "sweep" not in self.config:
+            self._save_checkpoint()
+        else:
+            return best_result
 
     def _save_checkpoint(self):
         print("...SAVING MODEL...")
