@@ -99,9 +99,6 @@ class Preprocess:
         # data["주기적 성질을 갖는 컬럼"] = process_periodic(data=data["주기적 성질을 갖는 컬럼"], period=주기)
         if "test_hour" in columns:
             data["test_hour"] = process_periodic(data=data["test_hour"], period=24)
-
-        if "test_month" in columns:
-            data["test_month"] = process_periodic(data=data["test_month"], period=12)
             
         return data
 
