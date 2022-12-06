@@ -9,7 +9,7 @@ class ScaledDotProductAttention(nn.Module):
         self, 
         dim_model: int, 
         dropout_rate: float
-        ) -> None:
+    ) -> None:
         """
         Args:
             dim_model (int): Total dimension of the model.
@@ -27,16 +27,18 @@ class ScaledDotProductAttention(nn.Module):
         k: torch.tensor, 
         v: torch.tensor, 
         attn_mask=None
-        ) -> torch.tensor:
+    ) -> torch.tensor:
         """
         Args:
             q (torch.tensor): Query embeddings of shape :math:`(b, L, E_q)`. Queries are compared against key-value pairs to produce the output.
             k (torch.tensor): Key embeddings of shape :math:`(b, S, E_k)`
             v (torch.tensor): Value embeddings of shape :math:`(b, S, E_v)`
-            attn_mask (_type_, optional): _description_. Defaults to None.
+            attn_mask (torch.tensor, optional): Masks where zero padded. If specified, a 2D or 3D mask preventing attention to certain positions. Defaults to None.
 
         Returns:
-            torch.tensor: _description_
+            output: Attention outputs of shape :math:`(L, E)` Where :math:`L` is the target sequence length, and :math:`E` is the
+          embedding dimension ``embed_dim``.
+            attn: Attention weight.
         """
         attn = torch.matmul(q, k.transpose(-1, -2)) / math.sqrt(self.dim_model)
 
@@ -49,7 +51,12 @@ class ScaledDotProductAttention(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, num_heads, dim_model, dropout_rate):
+    def __init__(
+            self,
+            num_heads: int,
+            dim_model: int,
+            dropout_rate: float
+    ) -> None:
         """
         Args:
             num_heads (int): Number of parallel attention heads. Note that ``embed_dim`` will be split.
@@ -72,7 +79,13 @@ class MultiHeadAttention(nn.Module):
         self.w_v = nn.Linear(dim_model, dim_model)
         self.w_o = nn.Linear(dim_model, dim_model)
 
-    def forward(self, q, k, v, attn_mask=None):
+    def forward(
+        self,
+        q: torch.tensor,
+        k: torch.tensor,
+        v: torch.tensor,
+        attn_mask=None
+    ) -> torch.tensor:
         """
         Args:
             q (torch.tensor): Query embeddings of shape :math:`(b, L, E_q)`. Queries are compared against key-value pairs to produce the output.
@@ -117,7 +130,18 @@ class MultiHeadAttention(nn.Module):
 
 
 class PositionWiseFeedForward(nn.Module):
-    def __init__(self, dim_model, dim_ffn, dropout_rate):
+    def __init__(
+            self,
+            dim_model: int,
+            dim_ffn: int,
+            dropout_rate: float
+    ) -> None:
+        """
+        Args:
+            dim_model (int): Total dimension of the model.
+            dim_ffn (int): dimension of feed forward net.
+            dropout_rate (float): Dropout probability on ``attn_output_weights``.
+        """
         super(PositionWiseFeedForward, self).__init__()
 
         self.sequential = nn.Sequential(
@@ -132,7 +156,21 @@ class PositionWiseFeedForward(nn.Module):
 
 
 class EncoderLayer(nn.Module):
-    def __init__(self, dim_model, dim_ffn, num_heads=8, dropout_rate=0.1):
+    def __init__(
+            self,
+            dim_model: int,
+            dim_ffn: int,
+            num_heads: int,
+            dropout_rate=0.1
+    ) -> None:
+        """
+        Args:
+            dim_model (int): Total dimension of the model.
+            dim_ffn (int): dimension of feed forward net.
+            num_heads (int): Number of parallel attention heads. Note that ``embed_dim`` will be split.
+            across ``num_heads`` (i.e. each head will have dimension ``embed_dim // num_heads``).
+            dropout_rate (float): Dropout probability on ``attn_output_weights``.
+        """
         super(EncoderLayer, self).__init__()
 
         self.attention = MultiHeadAttention(
@@ -147,13 +185,16 @@ class EncoderLayer(nn.Module):
         self.norm_ffn = nn.LayerNorm(dim_model)
         self.dropout_ffn = nn.Dropout(p=dropout_rate)
 
-    def forward(self, x, attn_mask):
+    def forward(
+            self,
+            x: torch.tensor,
+            attn_mask: torch.tensor,
+    ) -> torch.tensor:
         output, attn = self.attention(q=x, k=x, v=x, attn_mask=attn_mask)
         output = self.norm_attn(self.dropout_attn(output) + x)
 
-        # ffn을 단어마다 하는 경우가 있는것을 발견 학습안될때 참고
-        res_x = output
+        x = output
         output = self.ffn(output)
-        output = self.norm_ffn(self.dropout_ffn(output) + res_x)
+        output = self.norm_ffn(self.dropout_ffn(output) + x)
 
         return output
