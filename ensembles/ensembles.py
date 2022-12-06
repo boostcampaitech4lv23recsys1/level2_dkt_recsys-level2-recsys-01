@@ -8,7 +8,7 @@ class Ensemble:
         self.filenames = os.listdir(filepath) # list형태
         self.output_list = []
 
-        output_path = [filepath+filename+'.csv' for filename in self.filenames]
+        output_path = [filepath+filename for filename in self.filenames]
         self.output_frame = pd.read_csv(output_path[0]).drop('prediction',axis=1)
         self.output_df = self.output_frame.copy()
 
