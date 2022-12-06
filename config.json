@@ -65,9 +65,9 @@
 
   "sweep" : {
     "name" : "Sweep 이름",
-    "method": "Sweep 방법",
+    "method": "grid/random/bayes",
     "metric" : {
-        "name": "val_aucroc",
+        "name": "val_fold",
         "goal": "maximize"   
         },
     "parameters" : {
