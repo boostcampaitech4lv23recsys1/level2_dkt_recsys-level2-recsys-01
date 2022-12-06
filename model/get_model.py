@@ -44,6 +44,9 @@ def get_models(config):
             embedding_dim=model_config["embedding_dim"],
             device=config["device"],
             config=config,
-        ).to(config["device"])    
+        ).to(config["device"]) 
+    
+    if config["arch"]["type"] == "GRUtransformer":
+        model = getattr(models, config["arch"]["type"])(config).to(config["device"])
 
     return model

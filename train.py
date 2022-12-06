@@ -9,7 +9,7 @@ from data_loader.preprocess import Preprocess
 from data_loader.dataset import BaseDataset, get_loader
 from sklearn.model_selection import KFold
 from trainer import BaseTrainer
-from utils import read_json
+from utils import read_json, set_seed
 from logger import wandb_logger
 
 import wandb
@@ -25,6 +25,10 @@ def main(config):
     preprocess = Preprocess(config)
     data = preprocess.load_train_data()
 
+    print("-------------------------using cat coloumn list-------------------------")
+    print(config["cat_cols"])
+    print("-------------------------using num coloumn list-------------------------")
+    print(config["num_cols"])
     print("---------------------------DONE PREPROCESSING----------------------------")
     wandb_train_func = functools.partial(
         run_kfold, config["preprocess"]["num_fold"], config, data
@@ -41,7 +45,7 @@ def main(config):
 
 
 def run_kfold(k, config, data):
-    kf = KFold(n_splits=k)
+    kf = KFold(n_splits=k, shuffle=True, random_state=config["trainer"]["seed"])
 
     now = datetime.now(timezone("Asia/Seoul")).strftime(f"%Y-%m-%d_%H:%M")
     for fold, (train_idx, val_idx) in enumerate(
@@ -60,6 +64,7 @@ def run_kfold(k, config, data):
             wandb_logger.sweep_update(config, w_config)
 
         model = models.get_models(config)
+<<<<<<< HEAD
         
         wandb.watch(model)
 
@@ -67,6 +72,12 @@ def run_kfold(k, config, data):
             f"-------------------------DONE FOLD {fold + 1} MODEL LOADING-----------------------"
         )
         
+=======
+        wandb_logger.init(now, model, config, fold + 1)
+        print(
+            f"--------------------------START FOLD {fold+1} TRAINING--------------------------"
+        )
+>>>>>>> e77209cbf6be3de7785ef11fc495726b82ae85d9
         train_set = BaseDataset(data, train_idx, config)
         val_set = BaseDataset(data, val_idx, config)
 
@@ -100,5 +111,6 @@ if __name__ == "__main__":
     config = read_json(args.config)
 
     config["device"] = "cuda" if torch.cuda.is_available() else "cpu"
+    set_seed(config["trainer"]["seed"])
 
     main(config)
