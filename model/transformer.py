@@ -56,17 +56,16 @@ class Transformer(nn.Module):
         self.prediction = nn.Sequential(nn.Linear(self.dim_model, 1), nn.Sigmoid())
     
     def forward(self, X):
-        # Embedding
         cat_feature = X['cat'].to(self.device)
         num_feature = X['num'].to(self.device)
         mask = X['mask']
 
-        # past
+       
         cat_emb_list = []
         for idx, cat_col in enumerate(self.cat_cols):
             cat_emb_list.append(
                 self.emb_cat_dict[cat_col](cat_feature[:, :, idx])
-            )  # 데이터에 따라 수정
+            )  
 
         cat_emb = torch.cat(cat_emb_list, dim=-1)
         cat_emb = self.cat_comb_proj(cat_emb)

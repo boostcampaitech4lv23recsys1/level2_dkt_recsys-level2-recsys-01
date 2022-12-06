@@ -16,7 +16,6 @@ class LSTM(nn.Module):
         self.cat_cols = self.config['cat_cols']
         self.num_cols = self.config['num_cols']
 
-        # Embedding
         self.embedding_dim = self.model_args['embedding_dim']
 
         self.one_embedding = self.config['one_embedding']
@@ -47,10 +46,8 @@ class LSTM(nn.Module):
         )
 
         self.prediction = nn.Sequential(nn.Linear(self.hidden_dim, 1), nn.Sigmoid())
-
+        
     def forward(self, input):
-
-        # Embedding
         cat_feature = input['cat'].to(self.device)
         num_feature = input['num'].to(self.device)
         
@@ -72,3 +69,4 @@ class LSTM(nn.Module):
         out = self.prediction(out)
         
         return out.squeeze(2)
+    

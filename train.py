@@ -15,10 +15,6 @@ from logger import wandb_logger
 import wandb
 import torch
 
-"""
-data 불러와서 trainer.py에 넘겨주기
-"""
-
 
 def main(config):
     print("---------------------------START PREPROCESSING---------------------------")

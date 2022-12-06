@@ -1,5 +1,5 @@
 {
-    "project": "transformer",
+    "project": "transformerLSTM",
     "entity": "dkt-dinosaur",
     "user": "sssu><",
   
@@ -8,24 +8,33 @@
       "question_number",
       "assessmentItemID"
     ],
-    "num_cols": ["elapsed_time_mean",
+    "num_cols": [
+    "ans_cumavg",
+    "ans_cumsum",
     "time_question_median",
     "tag_acc",
+    "elapsed_time_median",
+    "KnowledgeTag_et_std",
+    "KnowledgeTag_et_mean",
     "test_acc",
-    "KnowledgeTag_et_mean"
+    "test_hour",
+    "hour_acc",
+    "exp_tag",
+    "KnowledgeTag_aC_mean"
   ],
   
     "preprocess": {
       "data_dir": "./data",
       "data_ver": "v2.2",
-      "fe_elapsed_time": [200, "mean"],
+      "fe_elapsed_time": [120, "cut"],
       "use_k_fold": true,
-      "num_fold": 5
+      "num_fold": 5,
+      "data_augmentation": true
     },
   
     "dataset": {
       "type": "BaseDataset",
-      "max_seq_len": 128
+      "max_seq_len": 256
     },
   
     "data_loader": {
@@ -38,14 +47,16 @@
     },
   
     "arch": {
-      "type": "Transformer",
+      "type": "TransformerLSTM",
       "args": {
-        "dim_model": 128,
-        "dim_ffn": 64,
+        "dim_model": 1024,
+        "dim_ffn": 512,
         "embedding_dim": 64,
         "num_heads": 2,
         "n_layers": 1,
-        "dropout_rate": 0.2
+        "n_layers_transformer": 1,
+        "n_layers_LSTM": 1,
+        "dropout_rate": 0.3
       }
     },
   
@@ -55,16 +66,16 @@
       "type": "adam",
       "args": {
         "lr": 0.001,
-        "weight_decay": 0,
+        "weight_decay": 0.1,
         "amsgrad": false
       }
     },
   
     "trainer": {
       "type": "사용할 Trainer",
-      "epochs": 20,
+      "epochs": 50,
       "metric": ["aucroc", "accuracy"],
-      "seed": 42,
+      "seed": 417,
       "save_dir": "/opt/ml/model",
       "submission_dir": "/opt/ml/submission"
     }
