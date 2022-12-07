@@ -54,7 +54,7 @@ class Transformer(nn.Module):
             dim_ffn=self.dim_ffn,
             num_heads=self.num_heads,
             dropout_rate=self.dropout_rate,
-            n_layers=self.n_layers,
+            n_layers=self.n_layers_transformer,
         )
         self.prediction = nn.Sequential(nn.Linear(self.dim_model, 1), nn.Sigmoid())
     

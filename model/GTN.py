@@ -52,7 +52,7 @@ class GTN(Transformer):
             dim_ffn=self.dim_ffn,
             num_heads=self.num_heads,
             dropout_rate=self.dropout_rate,
-            n_layers=self.n_layers,
+            n_layers=self.n_layers_transformer,
         )
 
         self.positional_emb = PositionalEncoding(dim_model, self.max_len)
@@ -94,9 +94,9 @@ class GTN(Transformer):
 
         time_X = time_X + self.positional_emb(X["answerCode"])
 
-        out = self.encoder(self.dropout(base_X), mask)
-        time_out = self.time_encoder(self.dropout(time_X), mask)
+        channel_out = self.encoder(self.dropout(base_X), mask)
+        step_out = self.time_encoder(self.dropout(time_X), mask)
 
-        out = self.prediction(torch.cat([self.dropout(out), self.dropout(time_out)], dim=-1))
+        out = self.prediction(torch.cat([self.dropout(channel_out), self.dropout(step_out)], dim=-1))
 
-        return out.squeeze(2)
+        return out.sqeeuze(2)
