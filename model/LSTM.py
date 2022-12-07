@@ -48,18 +48,18 @@ class LSTM(nn.Module):
 
         self.prediction = nn.Sequential(nn.Linear(self.hidden_dim, 1), nn.Sigmoid())
         
-    def forward(self, input):
+    def forward(self, X):
         
         if self.one_embedding:
             X = feature_one_embedding(
-                input, 
+                X,
                 self.cat_comb_proj, 
                 self.num_comb_proj, 
                 self.emb_cat, 
                 self.device)
         else:
             X = feature_embedding(
-                input, 
+                X,
                 self.cat_cols,
                 self.emb_cat_dict,
                 self.cat_comb_proj, 

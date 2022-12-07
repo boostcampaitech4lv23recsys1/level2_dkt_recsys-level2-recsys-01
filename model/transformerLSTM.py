@@ -1,7 +1,7 @@
 from model import Transformer
 import torch.nn as nn
 import torch
-from model.utils import get_attn_mask, feature_embedding
+from model.utils import get_attn_mask, feature_embedding, feature_one_embedding
 
 
 class TransformerLSTM(Transformer):
@@ -37,15 +37,23 @@ class TransformerLSTM(Transformer):
         )
 
     def forward(self, X):
-        mask = X["mask"]
-        X = feature_embedding(
-            X=X,
-            cat_cols=self.cat_cols,
-            emb_cat_dict=self.emb_cat_dict,
-            cat_comb_proj=self.cat_comb_proj,
-            num_comb_proj=self.num_comb_proj,
-            device=self.device,
-        )
+        mask = X['mask']
+
+        if self.one_embedding:
+            X = feature_one_embedding(
+                X,
+                self.cat_comb_proj,
+                self.num_comb_proj,
+                self.emb_cat,
+                self.device)
+        else:
+            X = feature_embedding(
+                X,
+                self.cat_cols,
+                self.emb_cat_dict,
+                self.cat_comb_proj,
+                self.num_comb_proj,
+                self.device)
 
         mask = get_attn_mask(mask).to(self.device)
 

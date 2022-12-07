@@ -4,9 +4,13 @@ from transformers import get_linear_schedule_with_warmup
 
 def get_scheduler(optimizer, config):
     if 'lr_scheduler' in config:
-        if config['lr_scheduler'] == "plateau":
+        if config['lr_scheduler']["type"] == "plateau":
             return ReduceLROnPlateau(
-                optimizer, patience=10, factor=0.5, mode="max", verbose=True
+                optimizer,
+                patience=config['lr_scheduler']["patience"],
+                factor=config['lr_scheduler']["factor"],
+                mode=config['lr_scheduler']["mode"],
+                verbose=True
             )
             
         if config['lr_scheduler'] == "linear_warmup":

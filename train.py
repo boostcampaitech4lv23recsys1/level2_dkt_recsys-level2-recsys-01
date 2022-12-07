@@ -72,7 +72,6 @@ def run_kfold_sweep(k, config, data, now):
             valid_data_loader=valid,
             config=config,
             fold=fold + 1,
-
         )
 
         result = trainer.train()
