@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import LabelEncoder
+from random import gauss
 
 
 class Preprocess:
@@ -149,16 +150,27 @@ class Preprocess:
         augmentation_shuffle_rate = self.config["preprocess"][
             "augmentation_shuffle_rate"
         ]
+        augmentation_shuffle_strength = self.config["preprocess"][
+            "augmentation_shuffle_strength"
+        ]
+
         target_users = np.random.choice(
             data["userID"].unique(),
             size=int(data["userID"].nunique() * augmentation_shuffle_rate),
             replace=False,
         )
 
-        data_shuffle = data[data["userID"].isin(target_users)].sample(frac=1)
+        data_shuffle = data[data["userID"].isin(target_users)]
+        data_shuffle.reset_index(inplace=True, drop=True)
+        data_shuffle.reset_index(inplace=True)
+        data_shuffle["index_shuffle"] = sorted(
+            data_shuffle["index"],
+            key=lambda i: gauss(i * augmentation_shuffle_strength, 1),
+        )
+        data_shuffle = data_shuffle.sort_values("index_shuffle")
+        data_shuffle = data_shuffle.drop(["index", "index_shuffle"], axis=1)
         data_shuffle["userID"] = -data_shuffle["userID"] - 1
         data_final = pd.concat([data, data_shuffle])
-        data_final["userID"].nunique()
 
         return data_final
 
