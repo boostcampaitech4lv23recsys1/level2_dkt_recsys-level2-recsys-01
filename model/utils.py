@@ -33,3 +33,22 @@ def feature_embedding(
     X = torch.cat([cat_emb, num_emb], -1)
 
     return X
+
+def feature_one_embedding(
+    X,
+    cat_comb_proj,
+    num_comb_proj,
+    emb_cat,
+    device
+):
+    cat_feature = X['cat'].to(device)
+    num_feature = X['num'].to(device)
+
+    batch_size, max_seq_len, _ = cat_feature.size()
+    cat_emb = emb_cat(cat_feature).view(batch_size, max_seq_len, -1)
+    cat_emb = cat_comb_proj(cat_emb)
+    num_emb = num_comb_proj(num_feature) 
+
+    X = torch.cat([cat_emb, num_emb], -1)
+
+    return X

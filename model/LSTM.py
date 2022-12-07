@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+from model.utils import feature_embedding, feature_one_embedding
 
 class LSTM(nn.Module):
     def __init__(self, config):
@@ -48,22 +49,22 @@ class LSTM(nn.Module):
         self.prediction = nn.Sequential(nn.Linear(self.hidden_dim, 1), nn.Sigmoid())
         
     def forward(self, input):
-        cat_feature = input['cat'].to(self.device)
-        num_feature = input['num'].to(self.device)
         
         if self.one_embedding:
-            batch_size, max_seq_len, _ = cat_feature.size()
-            cat_emb = self.emb_cat(cat_feature).view(batch_size, max_seq_len, -1)
+            X = feature_one_embedding(
+                input, 
+                self.cat_comb_proj, 
+                self.num_comb_proj, 
+                self.emb_cat, 
+                self.device)
         else:
-            cat_emb_list = []
-            for idx, cat_col in enumerate(self.cat_cols):
-                cat_emb_list.append(self.emb_cat_dict[cat_col](cat_feature[:, :, idx]))
-            cat_emb = torch.cat(cat_emb_list, dim = -1)
-
-        cat_emb = self.cat_comb_proj(cat_emb)
-        num_emb = self.num_comb_proj(num_feature) 
-
-        X = torch.cat([cat_emb, num_emb], -1)
+            X = feature_embedding(
+                input, 
+                self.cat_cols,
+                self.emb_cat_dict,
+                self.cat_comb_proj, 
+                self.num_comb_proj, 
+                self.device)
 
         out, _ = self.lstm(self.dropout(X))
         out = self.prediction(out)
