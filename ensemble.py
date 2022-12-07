@@ -28,6 +28,9 @@ def main(args):
     elif args.ENSEMBLE_STRATEGY == 'MIXED':
         strategy_title = args.ENSEMBLE_STRATEGY.lower() #mixed
         result = en.mixed()
+    elif args.ENSEMBLE_STRATEGY =='HARDSOFT':
+        strategy_title = 'hs' #hardsoft
+        result = en.hardsoft()
     else:
         pass
     en.output_frame['prediction'] = result
@@ -44,8 +47,8 @@ if __name__=="__main__":
         default="./ensembles_inference/",
         help='required: 앙상블 하고 싶은 inference 파일들이 있는 폴더의 경로를 입력해주세요.')
     arg('--ENSEMBLE_STRATEGY', type=str, default='WEIGHTED',
-        choices=['WEIGHTED','MIXED'],
-        help='optional: [MIXED, WEIGHTED] 중 앙상블 전략을 선택해 주세요. (default="WEIGHTED")')
+        choices=['WEIGHTED','MIXED','HARDSOFT'],
+        help='optional: [MIXED, WEIGHTED, HARDSOFT] 중 앙상블 전략을 선택해 주세요. (default="WEIGHTED")')
     arg('--ENSEMBLE_WEIGHT', nargs='+',default=None,
         type=lambda s: [float(item) for item in s.split(',')],
         help='optional: Weighted 앙상블 전략에서 각 결과값의 가중치를 조정할 수 있습니다.')

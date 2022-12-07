@@ -12,6 +12,7 @@ class Ensemble:
         output_path = [filepath + filename for filename in self.filenames]
         self.output_frame = pd.read_csv(output_path[0]).drop("prediction", axis=1)
         self.output_df = self.output_frame.copy()
+        self.csv_nums = len(output_path)
 
         for path in output_path:
             self.output_list.append(pd.read_csv(path)["prediction"].to_list())
@@ -72,3 +73,27 @@ class Ensemble:
                 self.output_df[pre_idx] < 1, post_idx
             ]
         return result.tolist()
+    
+    def hardsoft(self):
+        """
+        ensemble hard first, soft second
+        
+        Example: 
+            problem 1: [0.1, 0.1, 0.6, 0.6, 0.8]
+                soft(weighted sum) -> 2.2/5 = 0.44
+                hardsoft -> over 0.5 (3), under 0.5 (2) -> soft ensemble [0.6, 0.6, 0.8] -> 2.0/3 = 0.66667
+        """
+        output = []
+        self.output_df = self.output_df.values[:,1:]
+        for row in self.output_df:
+            voting = np.where(row > 0.5,1,0)
+            if voting.sum() > self.csv_nums//2:
+                value = np.average(row[np.where(voting == 1)])
+            elif voting.sum() < self.csv_nums//2:
+                value = np.average(row[np.where(voting == 0)])
+            else:
+                value = np.average(row)
+            output.append(value)
+        result = pd.Series(output)
+        return result.tolist()
+        
