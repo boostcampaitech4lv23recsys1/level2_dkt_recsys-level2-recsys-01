@@ -64,7 +64,7 @@ class GTN(Transformer):
         mask = get_attn_mask(mask).to(self.device)
 
         if self.one_embedding:
-            X = feature_one_embedding(
+            base_X = feature_one_embedding(
                 X,
                 self.cat_comb_proj,
                 self.num_comb_proj,
@@ -77,7 +77,7 @@ class GTN(Transformer):
                 self.time_emb_cat,
                 self.device)
         else:
-            X = feature_embedding(
+            base_X = feature_embedding(
                 X,
                 self.cat_cols,
                 self.emb_cat_dict,
@@ -86,7 +86,7 @@ class GTN(Transformer):
                 self.device)
             time_X = feature_embedding(
                 X,
-                self.time_cat_cols,
+                self.cat_cols,
                 self.time_emb_cat_dict,
                 self.time_cat_comb_proj,
                 self.time_num_comb_proj,
@@ -94,9 +94,9 @@ class GTN(Transformer):
 
         time_X = time_X + self.positional_emb(X["answerCode"])
 
-        out = self.encoder(self.dropout(X), mask)
+        out = self.encoder(self.dropout(base_X), mask)
         time_out = self.time_encoder(self.dropout(time_X), mask)
 
-        out = self.prediction(torch.cat([self.dropout(out), self.dropout(time_out)]), dim=-1)
+        out = self.prediction(torch.cat([self.dropout(out), self.dropout(time_out)], dim=-1))
 
-        return out.sqeeuze(2)
+        return out.squeeze(2)

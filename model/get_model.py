@@ -8,7 +8,20 @@ def get_models(config):
             dim_model=model_config["dim_model"],
             dim_ffn=model_config["dim_ffn"],
             num_heads=model_config["num_heads"],
-            n_layers=model_config["n_layers"],
+            n_layers_transformern_layers_transformer=model_config["n_layers_transformer"],
+            dropout_rate=model_config["dropout_rate"],
+            embedding_dim=model_config["embedding_dim"],
+            device=config["device"],
+            config=config,
+        ).to(config["device"])
+
+    if config["arch"]["type"] == "GTN":
+        model_config = config["arch"]["args"]
+        model = getattr(models, config["arch"]["type"])(
+            dim_model=model_config["dim_model"],
+            dim_ffn=model_config["dim_ffn"],
+            num_heads=model_config["num_heads"],
+            n_layers_transformer=model_config["n_layers_transformer"],
             dropout_rate=model_config["dropout_rate"],
             embedding_dim=model_config["embedding_dim"],
             device=config["device"],

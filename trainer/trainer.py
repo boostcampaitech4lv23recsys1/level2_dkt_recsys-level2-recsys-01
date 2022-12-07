@@ -121,7 +121,7 @@ class BaseTrainer(object):
                 wandb.log(result, step=epoch)
 
             if self.lr_scheduler:
-                self.lr_scheduler.step()
+                self.lr_scheduler.step(result["val_loss"])
 
             if result["val_aucroc"] > self.max_val_aucroc:
                 self.state = {
