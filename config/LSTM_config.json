@@ -27,8 +27,7 @@
         "KnowledgeTag_aC_mean"
     ],
     "one_embedding": false,
-  
-  
+
     "preprocess": {
           "data_dir" : "./data",
           "data_ver" : "v2.2",
