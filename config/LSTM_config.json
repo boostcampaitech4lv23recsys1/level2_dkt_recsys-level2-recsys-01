@@ -8,8 +8,8 @@
         "test_id",
         "question_number",
         "KnowledgeTag"
-      ],
-      "num_cols": [
+    ],
+    "num_cols": [
         "elapsed_time",
         "ans_cumavg",
         "ans_cumsum",
@@ -25,7 +25,8 @@
         "hour_acc",
         "exp_tag",
         "KnowledgeTag_aC_mean"
-      ],
+    ],
+    "one_embedding": false,
   
   
     "preprocess": {
@@ -33,7 +34,8 @@
           "data_ver" : "v2.2",
           "fe_elapsed_time": [200, "mean"],
           "use_k_fold": true,
-          "num_fold" : 5
+          "num_fold" : 5,
+          "data_augmentation": false
     },
   
     "dataset" : {
@@ -72,50 +74,10 @@
     },
   
     "trainer" : {
-        "epochs": 100,
+        "epochs": 25,
         "metric": ["aucroc", "accuracy"],
         "seed" : 42,
         "save_dir": "./saved_model",
         "submission_dir": "./submission"
-    },
-    "sweep" : {
-        "name" : "LSTM_sweep_grid",
-        "method": "grid",
-        "metric" : {
-            "name": "val_fold",
-            "goal": "maximize"
-            },
-        "parameters": {
-            "batch_size": {
-                "values": [256, 128, 64]
-            },
-            "epochs": {
-                "values": [75]
-            },
-            "max_seq_len": {
-                "values": [250, 500, 750, 1000]
-            },
-            "optimizer": {
-                "values": ["adam"]
-            },
-            "learning_rate": {
-                "values": [0.1, 0.01, 0.001]
-            },
-            "weight_decay": {
-                "values": [0, 0.1, 0.01]
-            },
-            "hidden_dim": {
-                "values": [32, 64, 128, 256]
-            },
-            "embedding_dim": {
-                "values": [32, 64, 128, 256]
-            },
-            "n_layers": {
-                "values": [1, 2, 3, 4]
-            },
-            "dropout_rate": {
-                "values": [0.3, 0.4, 0.5]
-            }
-        }  
     }
 }
