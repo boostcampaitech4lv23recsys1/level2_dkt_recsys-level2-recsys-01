@@ -25,7 +25,7 @@ class Transformer(nn.Module):
         self.dim_model = dim_model
         self.dim_ffn = dim_ffn
         self.num_heads = num_heads
-        self.n_layers = n_layers_transformer
+        self.n_layers_transformer = n_layers_transformer
         self.dropout_rate = dropout_rate
         self.cat_cols = self.config["cat_cols"]
         self.num_cols = self.config["num_cols"]
