@@ -30,7 +30,7 @@
     "assessmentItemID_et_mean"
   ],
 
-  "one_embedding": false,
+  "one_embedding": true,
 
   "preprocess": {
     "data_dir": "./data",
@@ -74,14 +74,14 @@
     "type": "plateau",
     "patience": 5,
     "factor": 0.5,
-    "mode": "min"
+    "mode": "max"
   },
 
   "optimizer": {
     "type": "adamW",
     "args": {
       "lr": 0.001,
-      "weight_decay": 0.2,
+      "weight_decay": 0.3,
       "amsgrad": true
     }
   },
