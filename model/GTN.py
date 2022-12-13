@@ -52,7 +52,7 @@ class GTN(Transformer):
             dim_ffn=self.dim_ffn,
             num_heads=self.num_heads,
             dropout_rate=self.dropout_rate,
-            n_layers=self.n_layers,
+            n_layers=self.n_layers_transformer,
         )
 
         self.positional_emb = PositionalEncoding(dim_model, self.max_len)
@@ -105,4 +105,4 @@ class GTN(Transformer):
 
         out = self.prediction(torch.cat([channel_out, step_out], dim=-1))
 
-        return out.squeeze(2)
+        return out.sqeeuze(2)

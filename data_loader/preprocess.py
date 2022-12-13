@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import LabelEncoder
+from random import gauss
 
 
 class Preprocess:
@@ -21,8 +22,7 @@ class Preprocess:
         self.train_data = None
         self.test_data = None
 
-
-    def __feature_engineering(self, data:pd.DataFrame):
+    def __feature_engineering(self, data: pd.DataFrame):
         """
         Selecting features to use.
 
@@ -33,11 +33,11 @@ class Preprocess:
             pd.DataFrame: Dataframe with selected features
         """
         data = data[self.feature_engineering]
-        
+
         return data
 
     ## 공통으로 들어가야 하는 preprocessing (Ex elapsed time : threshold, categories : encoding)
-    def __preprocessing(self, data:pd.DataFrame, is_train=True):
+    def __preprocessing(self, data: pd.DataFrame, is_train=True):
         """
         Preprocess for all data needs. For example applying threshold to elapsed time.
 
@@ -63,13 +63,15 @@ class Preprocess:
             ] = threshold
             if imputation != "cut":
                 if imputation == "median":
-                    test2time = data.groupby("testId")["elapsed_time"].median().to_dict()
+                    test2time = (
+                        data.groupby("testId")["elapsed_time"].median().to_dict()
+                    )
                 elif imputation == "mean":
                     test2time = data.groupby("testId")["elapsed_time"].mean().to_dict()
-                    
-                data.loc[data[data["elapsed_time"] == threshold].index, "elapsed_time"] = data[
-                    data["elapsed_time"] == threshold
-                ]["testId"]
+
+                data.loc[
+                    data[data["elapsed_time"] == threshold].index, "elapsed_time"
+                ] = data[data["elapsed_time"] == threshold]["testId"]
                 data.loc[
                     data[data["elapsed_time"].apply(type) == str].index, "elapsed_time"
                 ] = data[data["elapsed_time"].apply(type) == str]["elapsed_time"].map(
@@ -108,21 +110,25 @@ class Preprocess:
                 return np.sin(2 * np.pi / period * data)
             if process_type == "cos":
                 return np.cos(2 * np.pi / period * data)
+
         if "test_hour" in columns:
             data["test_hour"] = process_periodic(data=data["test_hour"], period=24)
-            
+
         return data
 
     def __data_augmentation(self, data: pd.DataFrame):
         """
         Splitting user as new user if the user has solved number of problems more than max_seq_len.
-        
+        Data augmentation with shuffling the data with given rate. Set zero if you don't want.
+
         Args:
             data (pd.DataFrame): Raw dataframe
 
         Returns:
             pd.DataFrame: dataframe
         """
+
+        # data augmentation with max_seq_len
         max_seq_len = self.config["dataset"]["max_seq_len"]
         group = data.groupby("userID").get_group
         unique_user = data["userID"].unique()
@@ -139,15 +145,41 @@ class Preprocess:
         data["userID_origin"] = data["userID"].copy()
         encoder = LabelEncoder()
         data["userID"] = encoder.fit_transform(whole_new_user_id)
-        
-        return data
-    
+
+        # data augmentation with shuffling
+        augmentation_shuffle_rate = self.config["preprocess"][
+            "augmentation_shuffle_rate"
+        ]
+        augmentation_shuffle_strength = self.config["preprocess"][
+            "augmentation_shuffle_strength"
+        ]
+
+        target_users = np.random.choice(
+            data["userID"].unique(),
+            size=int(data["userID"].nunique() * augmentation_shuffle_rate),
+            replace=False,
+        )
+
+        data_shuffle = data[data["userID"].isin(target_users)]
+        data_shuffle.reset_index(inplace=True, drop=True)
+        data_shuffle.reset_index(inplace=True)
+        data_shuffle["index_shuffle"] = sorted(
+            data_shuffle["index"],
+            key=lambda i: gauss(i * augmentation_shuffle_strength, 1),
+        )
+        data_shuffle = data_shuffle.sort_values("index_shuffle")
+        data_shuffle = data_shuffle.drop(["index", "index_shuffle"], axis=1)
+        data_shuffle["userID"] = -data_shuffle["userID"] - 1
+        data_final = pd.concat([data, data_shuffle])
+
+        return data_final
+
     def load_data_from_file(self):
         df = pd.read_csv(
             f"{self.cfg_preprocess['data_dir']}/traintest_{self.cfg_preprocess['data_ver']}.csv"
         )
         df = df.sort_values(by=["userID", "Timestamp"], axis=0)
-        
+
         return df
 
     def load_train_data(self):
@@ -156,14 +188,14 @@ class Preprocess:
         self.train_data = self.__preprocessing(self.train_data, is_train=True)
         if self.augmentation:
             self.train_data = self.__data_augmentation(self.train_data)
-            
+
         return self.train_data
 
     def load_test_data(self):
         self.test_data = self.load_data_from_file()
         self.test_data = self.__feature_engineering(self.test_data)
         self.test_data = self.__preprocessing(self.test_data, is_train=False)
-        
+
         return self.test_data
 
     def gkf_data(self, data):
@@ -172,4 +204,3 @@ class Preprocess:
         group = data["userID"].tolist()
 
         return gkf, group
-

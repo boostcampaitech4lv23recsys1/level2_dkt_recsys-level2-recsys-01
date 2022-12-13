@@ -28,14 +28,14 @@
     "KnowledgeTag_aC_mean"
     ],
 
-  "one_embedding" : true,
+  "one_embedding" : false,
 
   "preprocess": {
     "data_dir": "./data",
     "data_ver": "v3.0",
     "fe_elapsed_time": [600, "mean"],
     "use_k_fold": true,
-    "num_fold": 10,
+    "num_fold": 5,
     "data_augmentation": true,
     "augmentation_shuffle_rate" : 0.2
   },
