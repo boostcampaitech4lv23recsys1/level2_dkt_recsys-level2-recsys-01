@@ -7,9 +7,13 @@ import random
 
 import pandas as pd
 
-
 class BaseDataset(Dataset):
-    def __init__(self, data, idx, config) -> None:
+    def __init__(
+            self,
+            data: Dataset,
+            idx: list,
+            config: dict,
+    ) -> None:
         super().__init__()
         self.data = data[data["userID"].isin(idx)]
         self.user_list = self.data["userID"].unique().tolist()
@@ -26,14 +30,14 @@ class BaseDataset(Dataset):
         self.X_cat = self.X_cat.groupby("userID")
         self.X_num = self.X_num.groupby("userID")
 
-        # self.data = data[.loc[idx, :].reset_index(drop=True)]
         self.group_data = self.data.groupby("userID")
 
-    # 총 데이터의 개수를 리턴
     def __len__(self) -> int:
+        """
+        return data length
+        """
         return len(self.user_list)
 
-    # 인덱스를 입력받아 그에 맵핑되는 입출력 데이터를 파이토치의 Tensor 형태로 리턴
     def __getitem__(self, index: int) -> object:
         user = self.user_list[index]
         cat = self.X_cat.get_group(user).values[:, :-1]
@@ -41,7 +45,6 @@ class BaseDataset(Dataset):
         y = self.Y.get_group(user).values
         seq_len = cat.shape[0]
 
-        # max seq len을 고려하여서 이보다 길면 자르고 아닐 경우 그대로 놔둔다
         if seq_len >= self.max_seq_len:
             cat = torch.tensor(cat[-self.max_seq_len :], dtype=torch.long)
             num = torch.tensor(num[-self.max_seq_len :], dtype=torch.float32)
@@ -81,6 +84,9 @@ class BaseDataset(Dataset):
 
 
 def collate_fn(batch):
+    """
+    [batch, data_len, dict] -> [dict, batch, data_len]
+    """
     X_cat, X_num, y, mask = [], [], [], []
     for user in batch:
         X_cat.append(user["cat"])
@@ -96,7 +102,14 @@ def collate_fn(batch):
     }
 
 
-def get_loader(train_set, val_set, config):
+def get_loader(
+        train_set: Dataset,
+        val_set: Dataset,
+        config: dict
+) -> DataLoader:
+    """
+    get Data Loader
+    """
     train_loader = DataLoader(
         train_set,
         num_workers=config["num_workers"],
@@ -111,14 +124,15 @@ def get_loader(train_set, val_set, config):
         batch_size=config["batch_size"],
         collate_fn=collate_fn,
     )
+
     return train_loader, valid_loader
 
 
 class XGBoostDataset(object):
     def __init__(
         self,
-        config,
-    ):
+        config: dict,
+    ) -> None:
         self.config = config
         self.train = self._load_train_data()
         self.test = self._load_test_data()

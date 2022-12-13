@@ -6,12 +6,12 @@ import torch.nn as nn
 class Encoder(nn.Module):
     def __init__(
         self,
-        dim_model,
-        dim_ffn,
-        num_heads,
-        dropout_rate,
-        n_layers,
-    ):
+        dim_model: int,
+        dim_ffn: int,
+        num_heads: int,
+        dropout_rate: float,
+        n_layers: int,
+    ) -> None:
         super(Encoder, self).__init__()
 
         self.layers = nn.ModuleList(

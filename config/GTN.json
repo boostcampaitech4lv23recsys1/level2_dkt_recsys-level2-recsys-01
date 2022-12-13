@@ -1,6 +1,6 @@
 {
   "user": "ryubright",
-  "project": "transformerLSTM",
+  "project": "GTN",
   "entity": "dkt-dinosaur",
 
   "cat_cols": [
@@ -25,15 +25,20 @@
     "test_hour",
     "hour_acc",
     "exp_tag",
-    "KnowledgeTag_aC_mean"
+    "KnowledgeTag_aC_mean",
+    "assessmentItemID_et_std",
+    "assessmentItemID_et_mean"
   ],
+
+  "one_embedding": true,
 
   "preprocess": {
     "data_dir": "./data",
-    "data_ver": "v2.2",
-    "fe_elapsed_time": [600, "mean"],
+    "data_ver": "v3.0",
+    "fe_elapsed_time": [600, "cut"],
     "use_k_fold": true,
-    "num_fold": 5
+    "num_fold": 5,
+    "data_augmentation": true
   },
 
   "dataset": {
@@ -51,7 +56,7 @@
   },
 
   "arch": {
-    "type": "TransformerLSTM",
+    "type": "GTN",
     "args": {
       "dim_model": 128,
       "dim_ffn": 128,
@@ -65,18 +70,25 @@
 
   "loss": "bce",
 
+  "lr_scheduler": {
+    "type": "plateau",
+    "patience": 5,
+    "factor": 0.5,
+    "mode": "max"
+  },
+
   "optimizer": {
     "type": "adamW",
     "args": {
       "lr": 0.001,
-      "weight_decay": 0,
+      "weight_decay": 0.3,
       "amsgrad": true
     }
   },
 
   "trainer": {
     "type": "사용할 Trainer",
-    "epochs": 100,
+    "epochs": 50,
     "metric": ["aucroc", "accuracy"],
     "seed": 417,
     "save_dir": "./save_model",

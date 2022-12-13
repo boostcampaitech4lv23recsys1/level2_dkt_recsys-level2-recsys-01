@@ -1,6 +1,3 @@
-"""
-학습된 모델을 가져와서 submission 생성
-"""
 from data_loader.preprocess import Preprocess
 from data_loader.dataset import BaseDataset, collate_fn
 from torch.utils.data import DataLoader

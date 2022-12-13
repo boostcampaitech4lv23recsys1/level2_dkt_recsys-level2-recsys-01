@@ -1,6 +1,7 @@
 from model import Transformer
 import torch.nn as nn
 import torch
+from model.utils import get_attn_mask, feature_embedding, feature_one_embedding
 
 
 class TransformerLSTM(Transformer):
@@ -29,40 +30,32 @@ class TransformerLSTM(Transformer):
         self.lstm = nn.LSTM(
             input_size=dim_model,
             hidden_size=dim_model,
-            num_layers=n_layers_LSTM,  # 이거 lstm이랑 transformer랑 달라야하지않나?
+            num_layers=n_layers_LSTM,
             batch_first=True,
             dropout=dropout_rate,
             bidirectional=False,
         )
 
     def forward(self, X):
-        # Embedding
-        cat_feature = X["cat"].to(self.device)
-        num_feature = X["num"].to(self.device)
-        mask = X["mask"]
+        mask = X['mask']
 
-        # past
-        cat_emb_list = []
-        for idx, cat_col in enumerate(self.cat_cols):
-            cat_emb_list.append(
-                self.emb_cat_dict[cat_col](cat_feature[:, :, idx])
-            )  # 데이터에 따라 수정
+        if self.one_embedding:
+            X = feature_one_embedding(
+                X,
+                self.cat_comb_proj,
+                self.num_comb_proj,
+                self.emb_cat,
+                self.device)
+        else:
+            X = feature_embedding(
+                X,
+                self.cat_cols,
+                self.emb_cat_dict,
+                self.cat_comb_proj,
+                self.num_comb_proj,
+                self.device)
 
-        cat_emb = torch.cat(cat_emb_list, dim=-1)
-        cat_emb = self.cat_comb_proj(cat_emb)
-
-        num_emb = self.num_comb_proj(num_feature)  # 마스크를 빼고 넣는다.
-        X = torch.cat([cat_emb, num_emb], -1)
-
-        mask_pad = (
-            torch.BoolTensor(mask == 1).unsqueeze(1).unsqueeze(1)
-        )  # (batch_size, 1, 1, max_len)
-        mask_time = (
-            1 - torch.triu(torch.ones((1, 1, mask.size(1), mask.size(1))), diagonal=1)
-        ).bool()  # (batch_size, 1, max_len, max_len)
-        mask = (mask_pad & mask_time).to(
-            self.device
-        )  # (batch_size, 1, max_len, max_len)
+        mask = get_attn_mask(mask).to(self.device)
 
         out = self.encoder(X, mask)
         hidden_out, cell_out = self.lstm(out)

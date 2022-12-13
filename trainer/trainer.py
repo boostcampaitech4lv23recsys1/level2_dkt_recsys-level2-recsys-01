@@ -1,7 +1,3 @@
-"""
-train.py에서 이 파일을 호출
-주어진 data에 대해서 학습만 시키면 됨
-"""
 import os
 import torch
 from numpy import inf
@@ -18,10 +14,6 @@ from tqdm import tqdm
 
 
 class BaseTrainer(object):
-    """
-    model과 data_loader, 그리고 각종 config를 넣어서 학습시키는 class
-    """
-
     def __init__(
         self,
         model: nn.Module,
@@ -39,7 +31,6 @@ class BaseTrainer(object):
 
         self.device = config["device"]
 
-        # 학습 관련 파라미터
         self.criterion = loss.get_loss(config)
         self.metric_ftns = self.cfg_trainer["metric"]
         self.optimizer = optimizer.get_optimizer(self.model, config["optimizer"])
@@ -53,14 +44,10 @@ class BaseTrainer(object):
 
         self.save_dir = self.cfg_trainer["save_dir"]
         self.min_val_loss = inf
+        self.max_val_aucroc = 0
         self.model_name = type(self.model).__name__
 
     def _train_epoch(self):
-        """
-        Training logic for an epoch
-
-        :param epoch: Current epoch number
-        """
         log = dict()
         total_outputs = []
         total_targets = []
@@ -72,7 +59,6 @@ class BaseTrainer(object):
             target = data["answerCode"].to(self.device)
             output = self.model(data)
             loss = self._compute_loss(output, target)
-            # target = target.detach().cpu()
             self.train_metrics.update("loss", loss.item())
 
             output = output[:, -1]
@@ -81,15 +67,14 @@ class BaseTrainer(object):
             total_outputs.append(output.detach())
             total_targets.append(target.detach())
 
-            # Backpropagation
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+
         for met in self.metric_ftns:
             ftns = metric.get_metric(met)
-            # breakpoint()
-            output_to_cpu = torch.concat(total_outputs).cpu().numpy()
-            target_to_cpu = torch.concat(total_targets).cpu().numpy()
+            output_to_cpu = torch.cat(total_outputs).cpu().numpy()
+            target_to_cpu = torch.cat(total_targets).cpu().numpy()
 
             self.train_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
         train_log = self.train_metrics.result()
@@ -116,8 +101,8 @@ class BaseTrainer(object):
 
         for met in self.metric_ftns:
             ftns = metric.get_metric(met)
-            output_to_cpu = torch.concat(total_outputs).cpu().numpy()
-            target_to_cpu = torch.concat(total_targets).cpu().numpy()
+            output_to_cpu = torch.cat(total_outputs).cpu().numpy()
+            target_to_cpu = torch.cat(total_targets).cpu().numpy()
             self.valid_metrics.update(met, ftns(output_to_cpu, target_to_cpu))
         val_log = self.valid_metrics.result()
         log.update(**{f"val_{k}": v for k, v in val_log.items()})
@@ -125,55 +110,43 @@ class BaseTrainer(object):
         return log
 
     def train(self):
-        """
-        Full training logic
-        """
-        # wandb_logger.init(self.model, self.config)
+        best_result = {}
+
         for epoch in range(self.start_epoch, self.epochs + 1):
             print(
                 f"-----------------------------EPOCH {epoch} TRAINING----------------------------"
             )
             result = self._train_epoch()
-            wandb.log(result, step=epoch)
+            if "sweep" not in self.config:
+                wandb.log(result, step=epoch)
 
             if self.lr_scheduler:
-                self.lr_scheduler.step()
+                self.lr_scheduler.step(result["val_aucroc"])
 
-            if result["val_loss"] < self.min_val_loss:
+            if result["val_aucroc"] > self.max_val_aucroc:
                 self.state = {
                     "model_name": self.model_name,
                     "epoch": epoch,
                     "state_dict": self.model.state_dict(),
                 }
-                self.min_val_loss = result["val_loss"]
-
-        self._save_checkpoint()
+                self.max_val_aucroc = result["val_aucroc"]
+                best_result = result
+        if "sweep" not in self.config:
+            self._save_checkpoint()
+        else:
+            return best_result
 
     def _save_checkpoint(self):
         print("...SAVING MODEL...")
-        """
-        Saving checkpoints
-        :param epoch: current epoch number
-        """
 
         save_path = os.path.join(self.save_dir, self.model_name)
         os.makedirs(save_path, exist_ok=True)
         save_path = os.path.join(save_path, f"fold_{self.fold}_best_model.pt")
         torch.save(self.state, save_path)
 
-    # loss계산하고 parameter update!
     def _compute_loss(self, output, target):
-        """
-        Args :
-            preds   : (batch_size, max_seq_len)
-            targets : (batch_size, max_seq_len)
-
-        """
         loss = self.criterion(output, target)
 
-        # # 마지막 시퀀드에 대한 값만 loss 계산
-        # loss = loss[:, -1]
-        # loss = torch.mean(loss)
         return loss
 
 

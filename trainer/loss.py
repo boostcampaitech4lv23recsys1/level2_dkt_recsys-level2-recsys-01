@@ -7,9 +7,11 @@ ex) RMSE
 import torch.nn.functional as F
 import torch.nn as nn
 
+
 def BCE_loss(output, target):
     loss = nn.BCELoss()
     return loss(output, target)
+
 
 def nll_loss(output, target):
     return F.nll_loss(output, target)

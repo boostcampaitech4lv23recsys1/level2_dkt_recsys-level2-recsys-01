@@ -1,0 +1,98 @@
+{
+  "user": "ryu",
+  "project": "GtnGRU",
+  "entity": "dkt-dinosaur",
+
+  "cat_cols": [
+    "assessmentItemID",
+    "test_id",
+    "question_number",
+    "KnowledgeTag",
+    "test_day",
+    "test_month"
+    ],
+  "num_cols": [
+    "elapsed_time",
+    "ans_cumavg",
+    "ans_cumsum",
+    "time_question_median",
+    "tag_acc",
+    "elapsed_time_mean",
+    "elapsed_time_median",
+    "KnowledgeTag_et_std",
+    "KnowledgeTag_et_mean",
+    "test_acc",
+    "test_hour",
+    "hour_acc",
+    "exp_tag",
+    "KnowledgeTag_aC_mean"
+    ],
+
+  "one_embedding" : false,
+
+  "preprocess": {
+    "data_dir": "./data",
+    "data_ver": "v3.0",
+    "fe_elapsed_time": [600, "mean"],
+    "use_k_fold": true,
+    "num_fold": 5,
+    "data_augmentation": true,
+    "augmentation_shuffle_rate" : 0.2
+  },
+
+  "dataset": {
+    "type": "BaseDataset",
+    "max_seq_len": 256
+  },
+
+  "data_loader": {
+    "type": "사용할 DataLoader",
+    "args": {
+      "batch_size": 128,
+      "num_workers": 4,
+      "collate_fn": "collate_fn"
+    }
+  },
+
+  "arch": {
+    "type": "GtnGRU",
+    "args": {
+      "hidden_dim" : 128,
+      "n_layers" : 1,
+      "dim_model": 128,
+      "dim_ffn": 128,
+      "embedding_dim": 64,
+      "num_heads": 2,
+      "n_layers_transformer": 1,
+      "n_layers_GRU": 1,
+      "dropout_rate": 0.3
+    }
+  },
+
+  "loss": "bce",
+
+  "scheduler": {
+    "type": "plateau",
+    "patience": 5,
+    "mode": "max",
+    "factor": 0.5
+  },
+
+  "optimizer": {
+    "type": "adamW",
+    "args": {
+      "lr": 0.001,
+      "weight_decay": 0.3,
+      "amsgrad": false
+    }
+  },
+
+  "trainer": {
+    "type": "사용할 Trainer",
+    "epochs": 50,
+    "metric": ["aucroc", "accuracy"],
+    "seed": 417,
+    "save_dir": "/opt/ml/model",
+    "submission_dir": "/opt/ml/submission"
+  }
+}
