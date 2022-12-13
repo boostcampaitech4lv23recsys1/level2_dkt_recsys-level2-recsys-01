@@ -88,7 +88,7 @@ Deep Knowledge Tracing/
 # 4. References
 
 - Boostcourse 강의 자료
-- [Riiid Solution]([https://www.kaggle.com/c/riiid-test-answer-prediction/discussion/210171](https://www.kaggle.com/competitions/riiid-test-answer-prediction/discussion/218318))
+- [Riiid Solution](https://www.kaggle.com/competitions/riiid-test-answer-prediction/discussion/218318)
 - [Gated Transformer Networks for Multivariate Time Series Classification](https://arxiv.org/pdf/2103.14438.pdf)
 
 ---
