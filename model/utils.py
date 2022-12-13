@@ -1,15 +1,14 @@
 import torch
+import numpy as np
 
 def get_attn_mask(mask):
-    mask_pad = (
-        torch.BoolTensor(mask == 1).unsqueeze(1).unsqueeze(1)
-    )  # (batch_size, 1, 1, max_len)
-    mask_time = (
-            1 - torch.triu(torch.ones((1, 1, mask.size(1), mask.size(1))), diagonal=1)
-    ).bool()  # (batch_size, 1, max_len, max_len)
-    mask = (mask_pad & mask_time)
+    seq_len = mask.size(1)
 
-    return mask
+    mask_pad = torch.BoolTensor(mask == 1).unsqueeze(1)
+    mask = torch.from_numpy((1 - np.triu(np.ones((1, seq_len ,seq_len)), k=1)).astype('bool'))
+    mask = (mask_pad & mask)
+
+    return mask.unsqueeze(1)
 
 
 def feature_embedding(

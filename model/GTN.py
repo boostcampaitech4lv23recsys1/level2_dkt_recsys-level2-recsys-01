@@ -56,7 +56,13 @@ class GTN(Transformer):
         )
 
         self.positional_emb = PositionalEncoding(dim_model, self.max_len)
-        self.prediction = nn.Sequential(nn.Linear(self.dim_model * 2, 1), nn.Sigmoid())
+        self.prediction = nn.Sequential(
+            nn.Linear(self.dim_model * 2, self.dim_model * 2),
+            nn.Dropout(p=dropout_rate),
+            nn.ReLU(),
+            nn.Linear(self.dim_model * 2, 1),
+            nn.Sigmoid(),
+        )
 
 
     def forward(self, X):
@@ -94,9 +100,9 @@ class GTN(Transformer):
 
         time_X = time_X + self.positional_emb(X["answerCode"])
 
-        out = self.encoder(self.dropout(base_X), mask)
-        time_out = self.time_encoder(self.dropout(time_X), mask)
+        channel_out = self.encoder(self.dropout(base_X), mask)
+        step_out = self.time_encoder(self.dropout(time_X), mask)
 
-        out = self.prediction(torch.cat([self.dropout(out), self.dropout(time_out)], dim=-1))
+        out = self.prediction(torch.cat([channel_out, step_out], dim=-1))
 
         return out.squeeze(2)
