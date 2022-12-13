@@ -81,7 +81,7 @@ Deep Knowledge Tracing/
 
 ---
 # 3. 프로젝트 수행 결과 (Private 1위)
-<img src="https://user-images.githubusercontent.com/78770033/207283978-cb758ba5-1826-43e8-9674-afbaa3c63a7d.png">
+<img src="https://user-images.githubusercontent.com/78770033/207284899-abbc901a-69a8-4c69-a596-4a0db1a2a741.png">
 
 ---
 
@@ -91,7 +91,7 @@ Deep Knowledge Tracing/
 - [Riiid Solution](https://www.kaggle.com/c/riiid-test-answer-prediction/discussion/210171)
 - [Gated Transformer Networks for Multivariate Time Series Classification](https://arxiv.org/pdf/2103.14438.pdf)
 
-
+---
 # 5. Contributors
 
 | <img src="https://user-images.githubusercontent.com/64895794/200263288-1d77b5f8-ed79-4548-9bc1-01aec2474aaa.png" width=200> | <img src="https://user-images.githubusercontent.com/64895794/200263509-9f564042-6da7-4410-a820-c8198037b0b3.png" width=200> | <img src="https://user-images.githubusercontent.com/64895794/200263683-37597e1d-10c1-483c-90f2-fb4749310e40.png" width=200> | <img src="https://user-images.githubusercontent.com/64895794/200263783-52ddbcf3-5e0b-431e-a84d-f7f17f3d061e.png" width=200> | <img src="https://user-images.githubusercontent.com/64895794/200264314-77728a99-9849-41e9-b13d-be120877a184.png" width=200> |
